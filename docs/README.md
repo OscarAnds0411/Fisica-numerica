@@ -426,4 +426,4 @@ of this software and associated documentation files...
 
 *Última actualización: Octubre 2025*
 
-</div>
+</div>   
