@@ -1,4 +1,5 @@
 """
+Programado: Dom 26/10/2025
 Lanzamiento de martillo. El record mundial para hombres en lanzamiento de martillo es de 86.74 m
 por Yuri Sedykh y se ha mantenido desde 1986. El martillo pesa 7:26 kg, es esférico,
 y tiene un radio de R = 6 cm. 

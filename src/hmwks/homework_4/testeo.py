@@ -1,311 +1,344 @@
 """
-Lanzamiento de martillo. El record mundial para hombres en lanzamiento de martillo es de 86.74 m
-por Yuri Sedykh y se ha mantenido desde 1986. El martillo pesa 7:26 kg, es esférico,
-y tiene un radio de R = 6 cm. 
+Considere el sistema de resortes que se muestra en la figura 1.
 
-La fricciÛn en el martillo puede ser considerada proporcional
-al cuadrado de la velocidad del martillo relativa al aire:
-F_D =\frac{1}{2}\rho AC_Dv^2
+(a) Escriba las ecuaciones de movimiento (acopladas) para los desplazamientos de las dos masas igaules a lo largo de x:
 
-donde \rho es la densidad del aire (1.2 kg/m^3 ) y A = \pi R^2 es la sección transver-
-sal del martillo. 
+(b) Calcule las frecuencias de los modos normales de vibración del sistema.
 
-El martillo puede experimentar, en principio, un flujo laminar con coeficiente de rozamiento CD = 0.5 
-o un flujo inestable oscilante con CD = 0.75.
+(c) Gráfique las posiciones de las masas en función del tiempo cuando estas inician su movimiento en la forma siguiente:
+i. Ambas masas parten del reposo habiendo sido desplazadas una igual cantidad hacia la derecha.
+ii. Ambas masas parten del reposo habiendo sido desplazadas una igual cantidad en sentidos opuestos.
+iii. Una masa parte de su posición de equilibrio y la otra de una posición desplazada hacia la derecha.
 
-(a) Resuelva la ecuación de movimiento para el lanzamiento oblicuo
-de martillo. Deberá transformar las EDOs para los moviemtos
-en x y y en un sistema de cuatro ecuaciones de primer orden.
-Considere lanzamientos desde una posición inicial x0 = 0 y y0 = 2
-m, para un ángulo ideal \theta = 45 y encuentre la velocidad que
-produce la distancia del lanzamiento del record mundial.
-
-(b) Calcule y grafique la dependencia en el tiempo de la altitud del
-martillo y su trayectoria y = y (x) en los tres régimenes:
-i. Sin fricción
-ii. Flujo laminar
-iii. Flujo inestable oscilante
-
-(c) En el inciso anterior, estime la cantidad en que es influenciada la
-distancia del lanzamiento por la fricción.
+(d) Si suponemos que los resortes no son lineales y la fuerza tiene la forma
+F = -k(x+0.1x^3)
+repita el proceso del iniciso b, y compare las respuestas del caso lineal y el caso no lineal.
 """
 from pylab import *
 import numpy as np
 from scipy.integrate import odeint
 from matplotlib.animation import FuncAnimation
+from rich.console import Console
+from rich.table import Table
 import os
 
-# Parámetros físicos
-g = 9.81  # Aceleración debido a la gravedad (m/s^2)
-rho = 1.2  # Densidad del aire (kg/m^3) 
-R = 0.06  # Radio del martillo (m)
-A = np.pi * R**2  # Área de sección transversal del martillo (m^2)
-m = 7.26  # Masa del martillo (kg)
-record_distance = 86.74  # Distancia del récord mundial (m)
-theta = np.radians(45)  # Ángulo de lanzamiento (radianes)
-x0, y0 = 0,  2  # Posición inicial (m)
-it_max = 500  # Número máximo de iteraciones
-dt = 0.01  # Paso de tiempo (s)
-N= 500  # Número de pasos de tiempo
-tol=1e-3  # Tolerancia para la convergencia
-drag_coeffs = [0.0, 0.5, 0.75]  # Coeficientes de arrastre para los tres regímenes
+# ===================================================================
+# PARÁMETROS DEL SISTEMA
+# ===================================================================
+m = 1.0      # Masa (kg)
+k = 10.0     # Constante de resortes externos (N/m)
+kp = 5.0     # Constante de resorte central (N/m)
 
 # Crear carpeta para resultados
-output_dir = 'resultados_martillo' # Carpeta para guardar resultados
-if not os.path.exists(output_dir): # Crear carpeta si no existe
-    os.makedirs(output_dir) # Crear carpeta si no existe
+output_dir = 'resultados_harm'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
+console = Console()
 
-#definición de las ecuaciones de movimiento (EDOs)
-def equations_of_motion(state, t, k):
-    """Devuelve las derivadas de las variables de estado."""
-    f0= state[1]
-    f1= -k/m*state[1]*np.sqrt(state[1]**2 + state[3]**2)    
-    f2= state[3]
-    f3 = -g - k/m*state[3]*np.sqrt(state[1]**2 + state[3]**2)
-    return array([f0, f1, f2, f3])
+# ===================================================================
+# INCISO (a): ECUACIONES DE MOVIMIENTO
+# ===================================================================
+console.print("\n" + "="*70, style="bold cyan")
+console.print(" INCISO (a): ECUACIONES DE MOVIMIENTO ACOPLADAS", style="bold cyan")
+console.print("="*70, style="bold cyan")
 
-#buscamos la distancia alcanzada para una velocidad inicial dada
-def distance_reached(initial, v0, k):
-    """Calcula la distancia alcanzada para una velocidad inicial dada y coeficiente de arrastre k."""
-    #como theta = 45 grados, las componentes x e y de la velocidad inicial son iguales
-    v= v0 * np.sin(pi/4)
-    finaltime = 10.0 # Tiempo final para la simulación
-    r0= array([initial[0],v , initial[1], v])  # Estado inicial: [x0, vx0, y0, vy0]
-    r=r0 # variable para almacenar el estado actual
-    t = linspace(0, it_max * dt, N)  # Vector de tiempo
-    groundtime= 0.0
+console.print("\n[bold]Sistema:[/bold] |--k--m₁--k'--m₂--k--|")
+console.print("\n[bold yellow]Ecuaciones diferenciales acopladas:[/bold yellow]")
+console.print("  m·ẍ₁ = -k·x₁ - k'·(x₁ - x₂)")
+console.print("  m·ẍ₂ = -k·x₂ - k'·(x₂ - x₁)")
+console.print("\n[bold yellow]Forma matricial:[/bold yellow]")
+console.print("  ẍ₁ = -(k + k')/m · x₁ + k'/m · x₂")
+console.print("  ẍ₂ = k'/m · x₁ - (k + k')/m · x₂")
 
-    #inicia lo dificil, jugar a adivinar con algo numerico
-    s=0
-    while s < it_max:
-        # Integración numérica de las EDOs
-        sol = odeint(equations_of_motion, r, t, args=(k,))
-        n=len(sol)-1
-        # Verificar si el martillo no ha tocado el suelo
-        if sol[n, 2] > 0:
-            finaltime += 1.0
-            t= linspace(0., finaltime, N)
-        else:
-           for j in range(n):
-               # verificamos si la fisica nos falla y fuimos capaces de atravesar el suelo
-               if sol[j, 2] <= 0:
-                   groundtime += t[j-1]-t[0]
-                   #checamos la tolerancia
-                   if abs(sol[j,2])<= tol/2.:
-                       # buscamos que en caso de ser preciso, reacemos todo pero usando el tiempo para que toque el suelo.
-                       t = linspace(0, groundtime+t[j]-t[j-1], N*50*s)
-                       sol = odeint(equations_of_motion, r0, t, args=(k,))
-                       n=len(sol)-1
-                       return (sol[n,0]+sol[n-1,0])/2., groundtime
-                   else: #en caso de no ser preciso, resolvemos la ED con los valores inciales, que seran las condiciones que el martillo llevaba antes de tocar el piso.
-                        r = array([sol[j-1][0], sol[j-1][1],    
-                                    sol[j-1][2], sol[j-1][3]])
-                        t=linspace(t[j-1], t[j], 50)
-                        break
-        s += 1
-    print("Distancia recorrida antes de llegar al suelo no encontrada\
-          dentro de las iteraciones permitidas. Regresamos 0.")
-    return 0.,0.
-                       
-                 
-# nos interesa hallar la velocidad inicial que produce la distancia del récord mundial
-def find_initial_velocity(distance, initial, v0, k):
-    """Encuentra la velocidad inicial que produce la distancia del récord mundial."""
-    f= lambda v: distance_reached(initial, v, k)[0]- distance
-    dv= 1.0e-3
-
-    i=0
-
-    #vamos a hacer Newton-Raphson para encontrar la velocidad inicial
-    while i < it_max:
-        fv = f(v0)
-        if abs(fv) <= tol:
-            return v0
-        # Derivada numérica
-        df = (f(v0 + dv/2.) - f(v0 - dv/2.)) / dv
-        dv= -fv/df
-        v0 += dv
-
-        i += 1
-    print("Velocidad inicial no encontrada dentro de las iteraciones permitidas.\
-          Regresamos 0.")
-    return 0.
-#Tambien nos interesa la trayectoria :
-def get_full_trajectory(initial, v0, k, tground):
-    """Obtiene la trayectoria completa para graficar."""
-    v = v0 * np.sin(np.pi/4)
-    r0 = array([initial[0], v, initial[1], v])
+def equations_linear(state, t):
+    """
+    Sistema de EDOs para osciladores acoplados lineales.
     
-    if tground == 0.:
-        tground = 5.0
+    Variables de estado:
+        state[0] = x1   (posición masa 1)
+        state[1] = v1   (velocidad masa 1)
+        state[2] = x2   (posición masa 2)
+        state[3] = v2   (velocidad masa 2)
     
-    t = linspace(0., tground, 500)
-    sol = odeint(equations_of_motion, r0, t, args=(k,))
+    Ecuaciones:
+        dx1/dt = v1
+        dv1/dt = -(k + k')/m · x1 + k'/m · x2
+        dx2/dt = v2
+        dv2/dt = k'/m · x1 - (k + k')/m · x2
+    """
+    x1, v1, x2, v2 = state
     
-    return sol, t
-#imprimmos las condiciones iniciales
-print("\nCondiciones iniciales:")
-print(f"  x0 = {x0} m, y0 = {y0} m, θ = 45°")
-print("\nEncontrando velocidad inicial para alcanzar récord mundial...")
-print("="*70)
-
-v_aux = [] # Lista para almacenar velocidades iniciales
-for i, cd in enumerate(drag_coeffs):
-    print(f"  * Régimen {i+1} (C_D = {cd}):")
-    k = rho * A * cd / 2.0
-    v0_record = find_initial_velocity(record_distance, array([x0, y0]), 28.0, k)
-    v_aux.append(v0_record) # Agregar velocidad inicial encontrada a la lista --- nos serviran más adelante
-    if v0_record == 0.:
-        print("ERROR: No se pudo calcular la velocidad inicial.")
-        exit(1)
-    else:
-        print(f"Velocidad inicial necesaria: v0 = {v0_record:.2f} m/s")
-        print(f"(Para alcanzar {record_distance} m con C_D = {cd})")
-        print("="*70)
-
-print("\n" + "="*70)
-print("TRAYECTORIAS EN LOS TRES REGÍMENES")
-print("="*70)
-
-solutions = [] # Almacenar soluciones para cada régimen
-times_list = [] # Almacenar tiempos para cada régimen
-distances_list = [] # Almacenar distancias alcanzadas
-labels = ['Sin fricción', 'Flujo laminar', 'Flujo inestable oscilante'] # Etiquetas para los regímenes
-cd_labels = ['C_D = 0.0', 'C_D = 0.5', 'C_D = 0.75'] # Etiquetas para los coeficientes de arrastre
-colors = ['#2E86AB', '#A23B72', '#F18F01'] # Colores para las gráficas
-
-print("\nCalculando trayectorias...")
-for i, cd in enumerate(drag_coeffs): # Iterar sobre los coeficientes de arrastre
-    k = rho * A * cd / 2.0
-    distance, time = distance_reached(array([x0, y0]), v_aux[i], k) # Calcular distancia alcanzada
-    distances_list.append(distance)     # Almacenar distancia alcanzada
+    dx1_dt = v1
+    dv1_dt = -(k + kp)/m * x1 + kp/m * x2
+    dx2_dt = v2
+    dv2_dt = kp/m * x1 - (k + kp)/m * x2
     
-    print(f"\n{labels[i]} ({cd_labels[i]}):")
-    print(f"  Distancia alcanzada: {distance:.2f} m") # Almacenar distancia alcanzada
-    print(f"  Tiempo de vuelo: {time:.2f} s") # Almacenar tiempo de vuelo
-    print(f"  Velocidad inicial: v0 = {v_aux[i]:.2f} m/s")
+    return array([dx1_dt, dv1_dt, dx2_dt, dv2_dt])
 
-    sol, t = get_full_trajectory(array([x0, y0]), v_aux[i], k, time) # Obtener trayectoria completa
-    solutions.append(sol) # Almacenar solución
-    times_list.append(t) # Almacenar tiempos
-print("="*70)
-print("Calculo de las trayectorias con la velocidad inicial dada con C_D = 0.0: v0 =",v_aux[0])
-print("\nCalculando trayectorias...")
-sols=[] # Almacenar soluciones para cada régimen
-tims=[] # Almacenar tiempos para cada régimen
-dists=[] # Almacenar distancias alcanzadas
-for i, cd in enumerate(drag_coeffs): # Iterar sobre los coeficientes de arrastre
-    k = rho * A * cd / 2.0
-    distance, time = distance_reached(array([x0, y0]), v_aux[0], k) # Calcular distancia alcanzada
-    dists.append(distance)     # Almacenar distancia alcanzada
-    
-    print(f"\n{labels[i]} ({cd_labels[i]}):")
-    print(f"  Distancia alcanzada: {distance:.2f} m") # Almacenar distancia alcanzada
-    print(f"  Tiempo de vuelo: {time:.2f} s") # Almacenar tiempo de vuelo
+# ===================================================================
+# INCISO (b): FRECUENCIAS DE MODOS NORMALES
+# ===================================================================
+console.print("\n" + "="*70, style="bold cyan")
+console.print(" INCISO (b): FRECUENCIAS DE MODOS NORMALES", style="bold cyan")
+console.print("="*70, style="bold cyan")
 
-    sol, t = get_full_trajectory(array([x0, y0]), v_aux[0], k, time) # Obtener trayectoria completa
-    sols.append(sol) # Almacenar solución
-    tims.append(t) # Almacenar tiempos
-print("="*70)
-print(" GENERANDO GRÁFICAS POR RÉGIMEN...")
-print("="*70)
+# Matriz de coeficientes del sistema
+A = array([[-(k + kp)/m, kp/m],
+           [kp/m, -(k + kp)/m]])
 
-for i, (sol, t, cd, label, cd_label, color, distance) in enumerate(
-    zip(solutions, times_list, drag_coeffs, labels, cd_labels, colors, distances_list)):
+# Eigenvalores y eigenvectores
+eigenvalues, eigenvectors = np.linalg.eig(A)
+
+# Frecuencias angulares (ω² = -eigenvalue)
+omega_squared = -eigenvalues
+omega = np.sqrt(omega_squared)
+
+# Frecuencias en Hz
+frequencies = omega / (2 * np.pi)
+
+# Períodos
+periods = 1 / frequencies
+
+console.print(f"\n[bold]Parámetros del sistema:[/bold]")
+console.print(f"  m = {m} kg")
+console.print(f"  k = {k} N/m")
+console.print(f"  k' = {kp} N/m")
+
+# Tabla de resultados
+table = Table(title="Modos Normales de Vibración", style="cyan")
+table.add_column("Modo", style="yellow", justify="center")
+table.add_column("ω (rad/s)", justify="center")
+table.add_column("f (Hz)", justify="center")
+table.add_column("T (s)", justify="center")
+table.add_column("Descripción", justify="left")
+
+# Modo 1: Simétrico (ambas masas se mueven igual)
+table.add_row(
+    "1 (Simétrico)",
+    f"{omega[0]:.3f}",
+    f"{frequencies[0]:.3f}",
+    f"{periods[0]:.3f}",
+    "Masas oscilan en fase (→→ o ←←)"
+)
+
+# Modo 2: Antisimétrico (masas se mueven opuestas)
+table.add_row(
+    "2 (Antisimétrico)",
+    f"{omega[1]:.3f}",
+    f"{frequencies[1]:.3f}",
+    f"{periods[1]:.3f}",
+    "Masas oscilan fuera de fase (→← o ←→)"
+)
+
+console.print(table)
+
+console.print("\n[bold green]✓ Eigenvectores (modos normales):[/bold green]")
+console.print(f"  Modo 1: [{eigenvectors[0,0]:.3f}, {eigenvectors[1,0]:.3f}]")
+console.print(f"  Modo 2: [{eigenvectors[0,1]:.3f}, {eigenvectors[1,1]:.3f}]")
+
+# ===================================================================
+# INCISO (c): GRÁFICAS PARA DIFERENTES CONDICIONES INICIALES
+# ===================================================================
+console.print("\n" + "="*70, style="bold cyan")
+console.print(" INCISO (c): SIMULACIONES CON DIFERENTES CONDICIONES INICIALES", style="bold cyan")
+console.print("="*70, style="bold cyan")
+
+# Tiempo de simulación
+t = linspace(0, 20, 1000)
+
+# Condiciones iniciales
+conditions = [
+    {
+        'name': 'Ambas masas desplazadas hacia la derecha',
+        'state0': [0.5, 0, 0.5, 0],  # [x1, v1, x2, v2]
+        'description': 'x₁(0) = x₂(0) = 0.5 m, v₁(0) = v₂(0) = 0'
+    },
+    {
+        'name': 'Masas desplazadas en sentidos opuestos',
+        'state0': [0.5, 0, -0.5, 0],
+        'description': 'x₁(0) = 0.5 m, x₂(0) = -0.5 m, v₁(0) = v₂(0) = 0'
+    },
+    {
+        'name': 'Una en equilibrio, otra desplazada',
+        'state0': [0, 0, 0.5, 0],
+        'description': 'x₁(0) = 0, x₂(0) = 0.5 m, v₁(0) = v₂(0) = 0'
+    }
+]
+
+console.print("\n[bold]Simulando movimientos...[/bold]")
+
+for idx, condition in enumerate(conditions, 1):
+    console.print(f"\n  {condition['name']}")
+    console.print(f"    Condición: {condition['description']}")
     
-    # Crear figura con 2 subplots
-    fig, (ax1, ax2) = subplots(1, 2, figsize=(14, 5))
-    fig.suptitle(f'{label}\n{cd_label} | v₀ = {v_aux[i]:.2f} m/s', 
-                 fontsize=15, fontweight='bold')
+    # Resolver EDOs
+    solution = odeint(equations_linear, condition['state0'], t)
+    x1 = solution[:, 0]
+    x2 = solution[:, 2]
     
-    # Subplot 1: Trayectoria y = y(x)
-    ax1.plot(sol[:, 0], sol[:, 2], color=color, linewidth=3, label='Trayectoria')
-    ax1.axhline(y=0, color='black', linewidth=1.5, linestyle='--', alpha=0.7)
-    ax1.set_xlabel('Distancia horizontal x (m)', fontsize=12)
-    ax1.set_ylabel('Altura y (m)', fontsize=12)
-    ax1.set_title('Trayectoria y = y(x)', fontsize=13, fontweight='bold')
-    ax1.text(0.98, 0.95, f'Alcance: {distance:.2f} m', 
-             transform=ax1.transAxes, fontsize=11,
-             verticalalignment='top', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.85))
-    ax1.grid(True, alpha=0.4)
-    ax1.set_xlim(left=0)
-    ax1.set_ylim(bottom=0)
+    # Crear figura
+    fig, (ax1, ax2) = subplots(2, 1, figsize=(12, 8))
+    fig.suptitle(f"{condition['name']}\n{condition['description']}", 
+                 fontsize=14, fontweight='bold')
     
-    # Subplot 2: Altura vs tiempo y = y(t)
-    ax2.plot(t, sol[:, 2], color=color, linewidth=3, label='Altura')
-    ax2.axhline(y=0, color='black', linewidth=1.5, linestyle='--', alpha=0.7)
-    ax2.set_xlabel('Tiempo t (s)', fontsize=12)
-    ax2.set_ylabel('Altura y (m)', fontsize=12)
-    ax2.set_title('Dependencia temporal y = y(t)', fontsize=13, fontweight='bold')
-    ax2.text(0.98, 0.95, f'Tiempo: {t[-1]:.2f} s', 
-             transform=ax2.transAxes, fontsize=11,
-             verticalalignment='top', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.85))
-    ax2.grid(True, alpha=0.4)
-    ax2.set_xlim(left=0)
-    ax2.set_ylim(bottom=0)
+    # Subplot 1: Posiciones vs tiempo
+    ax1.plot(t, x1, 'b-', linewidth=2, label='Masa 1 (x₁)')
+    ax1.plot(t, x2, 'r-', linewidth=2, label='Masa 2 (x₂)')
+    ax1.axhline(y=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    ax1.set_xlabel('Tiempo (s)', fontsize=11)
+    ax1.set_ylabel('Posición (m)', fontsize=11)
+    ax1.set_title('Posiciones de las masas vs tiempo', fontsize=12, fontweight='bold')
+    ax1.grid(True, alpha=0.3)
+    ax1.legend(fontsize=10)
+    
+    # Subplot 2: Espacio de fase (x1 vs x2)
+    ax2.plot(x1, x2, 'g-', linewidth=2, alpha=0.7)
+    ax2.plot(x1[0], x2[0], 'go', markersize=10, label='Inicio')
+    ax2.plot(x1[-1], x2[-1], 'rs', markersize=10, label='Final')
+    ax2.axhline(y=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    ax2.axvline(x=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    ax2.set_xlabel('Posición masa 1, x₁ (m)', fontsize=11)
+    ax2.set_ylabel('Posición masa 2, x₂ (m)', fontsize=11)
+    ax2.set_title('Espacio de configuración (x₁ vs x₂)', fontsize=12, fontweight='bold')
+    ax2.grid(True, alpha=0.3)
+    ax2.legend(fontsize=10)
+    ax2.axis('equal')
     
     tight_layout()
-    filename = f'{output_dir}/regimen_{i+1}_CD_{cd:.2f}.png'
+    filename = f'{output_dir}/caso_{idx}_lineal.png'
     savefig(filename, dpi=300, bbox_inches='tight')
-    print(f"Guardado: {filename}")
+    console.print(f"    [green]✓ Guardado: {filename}[/green]")
     show()
     close(fig)
 
-print("\n" + "="*70)
-print("INFLUENCIA DE LA FRICCIÓN")
-print("="*70)
+# ===================================================================
+# INCISO (d): SISTEMA NO LINEAL
+# ===================================================================
+console.print("\n" + "="*70, style="bold cyan")
+console.print(" INCISO (d): SISTEMA NO LINEAL F = -k(x + 0.1x³)", style="bold cyan")
+console.print("="*70, style="bold cyan")
 
-print("\n" + "-"*70)
-print(f"{'Régimen':<35} {'Distancia (m)':<15} {'Pérdida (m)':<15} {'Pérdida (%)'}")
-print("-"*70)
+def equations_nonlinear(state, t):
+    """
+    Sistema de EDOs para osciladores acoplados NO LINEALES.
+    
+    Fuerza no lineal: F = -k(x + 0.1x³)
+    
+    Ecuaciones:
+        dx1/dt = v1
+        dv1/dt = -k/m·(x1 + 0.1x1³) - k'/m·[(x1-x2) + 0.1(x1-x2)³]
+        dx2/dt = v2
+        dv2/dt = -k/m·(x2 + 0.1x2³) - k'/m·[(x2-x1) + 0.1(x2-x1)³]
+    """
+    x1, v1, x2, v2 = state
+    
+    # Fuerza no lineal
+    F1_ext = -k/m * (x1 + 0.1*x1**3)
+    F1_coupling = -kp/m * ((x1 - x2) + 0.1*(x1 - x2)**3)
+    
+    F2_ext = -k/m * (x2 + 0.1*x2**3)
+    F2_coupling = -kp/m * ((x2 - x1) + 0.1*(x2 - x1)**3)
+    
+    dx1_dt = v1
+    dv1_dt = F1_ext + F1_coupling
+    dx2_dt = v2
+    dv2_dt = F2_ext + F2_coupling
+    
+    return array([dx1_dt, dv1_dt, dx2_dt, dv2_dt])
 
-losses_m = []
-losses_pct = []
+console.print("\n[bold yellow]Ecuaciones no lineales:[/bold yellow]")
+console.print("  F₁ = -k(x₁ + 0.1x₁³) - k'[(x₁-x₂) + 0.1(x₁-x₂)³]")
+console.print("  F₂ = -k(x₂ + 0.1x₂³) - k'[(x₂-x₁) + 0.1(x₂-x₁)³]")
 
-for cd, dist, label in zip(drag_coeffs, dists, labels):
-    if dist > 0:
-        loss_m = record_distance - dist
-        loss_pct = (loss_m / record_distance) * 100
-        losses_m.append(loss_m)
-        losses_pct.append(loss_pct)
-        
-        print(f"{label:<35} {dist:<15.2f} {loss_m:<15.2f} {loss_pct:>6.2f}%")
-    else:
-        losses_m.append(0)
-        losses_pct.append(0)
-        print(f"{label:<35} {'N/A':<15} {'N/A':<15} {'N/A'}")
+console.print("\n[bold]Comparación: Sistema lineal vs no lineal[/bold]")
 
-print("-"*70)
+for idx, condition in enumerate(conditions, 1):
+    console.print(f"\n  {condition['name']}")
+    
+    # Resolver ambos sistemas
+    sol_linear = odeint(equations_linear, condition['state0'], t)
+    sol_nonlinear = odeint(equations_nonlinear, condition['state0'], t)
+    
+    # Crear figura comparativa
+    fig, axes = subplots(2, 2, figsize=(14, 10))
+    fig.suptitle(f"Comparación Lineal vs No Lineal\n{condition['name']}", 
+                 fontsize=15, fontweight='bold')
+    
+    # Subplot 1: Masa 1 - Lineal vs No lineal
+    axes[0,0].plot(t, sol_linear[:, 0], 'b-', linewidth=2, label='Lineal')
+    axes[0,0].plot(t, sol_nonlinear[:, 0], 'r--', linewidth=2, label='No lineal')
+    axes[0,0].axhline(y=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    axes[0,0].set_xlabel('Tiempo (s)', fontsize=10)
+    axes[0,0].set_ylabel('Posición x₁ (m)', fontsize=10)
+    axes[0,0].set_title('Masa 1', fontsize=11, fontweight='bold')
+    axes[0,0].grid(True, alpha=0.3)
+    axes[0,0].legend(fontsize=9)
+    
+    # Subplot 2: Masa 2 - Lineal vs No lineal
+    axes[0,1].plot(t, sol_linear[:, 2], 'b-', linewidth=2, label='Lineal')
+    axes[0,1].plot(t, sol_nonlinear[:, 2], 'r--', linewidth=2, label='No lineal')
+    axes[0,1].axhline(y=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    axes[0,1].set_xlabel('Tiempo (s)', fontsize=10)
+    axes[0,1].set_ylabel('Posición x₂ (m)', fontsize=10)
+    axes[0,1].set_title('Masa 2', fontsize=11, fontweight='bold')
+    axes[0,1].grid(True, alpha=0.3)
+    axes[0,1].legend(fontsize=9)
+    
+    # Subplot 3: Espacio de fase - Lineal
+    axes[1,0].plot(sol_linear[:, 0], sol_linear[:, 2], 'b-', linewidth=2)
+    axes[1,0].plot(sol_linear[0, 0], sol_linear[0, 2], 'go', markersize=8)
+    axes[1,0].axhline(y=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    axes[1,0].axvline(x=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    axes[1,0].set_xlabel('x₁ (m)', fontsize=10)
+    axes[1,0].set_ylabel('x₂ (m)', fontsize=10)
+    axes[1,0].set_title('Espacio de fase - LINEAL', fontsize=11, fontweight='bold')
+    axes[1,0].grid(True, alpha=0.3)
+    axes[1,0].axis('equal')
+    
+    # Subplot 4: Espacio de fase - No lineal
+    axes[1,1].plot(sol_nonlinear[:, 0], sol_nonlinear[:, 2], 'r-', linewidth=2)
+    axes[1,1].plot(sol_nonlinear[0, 0], sol_nonlinear[0, 2], 'go', markersize=8)
+    axes[1,1].axhline(y=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    axes[1,1].axvline(x=0, color='black', linewidth=0.8, linestyle='--', alpha=0.5)
+    axes[1,1].set_xlabel('x₁ (m)', fontsize=10)
+    axes[1,1].set_ylabel('x₂ (m)', fontsize=10)
+    axes[1,1].set_title('Espacio de fase - NO LINEAL', fontsize=11, fontweight='bold')
+    axes[1,1].grid(True, alpha=0.3)
+    axes[1,1].axis('equal')
+    
+    tight_layout()
+    filename = f'{output_dir}/caso_{idx}_comparacion.png'
+    savefig(filename, dpi=300, bbox_inches='tight')
+    console.print(f"    [green]✓ Guardado: {filename}[/green]")
+    show()
+    close(fig)
 
-# Resumen final
-print("\n" + "="*70)
-print(" RESUMEN DE RESULTADOS")
-print("="*70)
-print(f"\nVelocidad inicial (sin fricción): v0 = {v0_record:.2f} m/s")
-print(f"Distancia récord objetivo: {record_distance:.2f} m\n")
+# ===================================================================
+# RESUMEN FINAL
+# ===================================================================
+console.print("\n" + "="*70, style="bold green")
+console.print(" RESUMEN DE RESULTADOS", style="bold green")
+console.print("="*70, style="bold green")
 
-if losses_m[1] > 0:
-    print(f"Flujo laminar (C_D = 0.5):")
-    print(f"  ->Reduce {losses_m[1]:.2f} m ({losses_pct[1]:.1f}%)")
-    print(f"  -> Alcance: {distances_list[1]:.2f} m\n")
+console.print(f"\n[bold]Frecuencias de modos normales:[/bold]")
+console.print(f"  ω₁ = {omega[0]:.3f} rad/s (modo simétrico)")
+console.print(f"  ω₂ = {omega[1]:.3f} rad/s (modo antisimétrico)")
 
-if losses_m[2] > 0:
-    print(f"Flujo inestable oscilante (C_D = 0.75):")
-    print(f"  -> Reduce {losses_m[2]:.2f} m ({losses_pct[2]:.1f}%)")
-    print(f"  -> Alcance: {distances_list[2]:.2f} m\n")
+console.print(f"\n[bold]Diferencias entre sistema lineal y no lineal:[/bold]")
+console.print("  • Sistema lineal: Oscilaciones armónicas puras (sinusoidales)")
+console.print("  • Sistema no lineal: Distorsión de la forma de onda")
+console.print("  • No linealidad introduce dependencia de amplitud en frecuencia")
+console.print("  • Espacio de fase no lineal muestra trayectorias distorsionadas")
 
-print("CONCLUSIÓN:")
-print(f"La fricción del aire reduce el alcance hasta en {max(losses_pct):.1f}%,")
-print(f"lo que representa una pérdida máxima de {max(losses_m):.2f} metros.")
+console.print(f"\n[bold cyan]✓ Archivos generados en '{output_dir}/':[/bold cyan]")
+console.print("  • caso_1_lineal.png - Ambas masas a la derecha (lineal)")
+console.print("  • caso_2_lineal.png - Masas en sentidos opuestos (lineal)")
+console.print("  • caso_3_lineal.png - Una en equilibrio (lineal)")
+console.print("  • caso_1_comparacion.png - Comparación lineal vs no lineal")
+console.print("  • caso_2_comparacion.png - Comparación lineal vs no lineal")
+console.print("  • caso_3_comparacion.png - Comparación lineal vs no lineal")
 
-print("\n" + "="*70)
-print(f" PROCESO COMPLETADO")
-print("="*70)
-print(f"\nArchivos generados en '{output_dir}/':")
-print("  * regimen_1_CD_0.00.png - Sin fricción")
-print("  * regimen_2_CD_0.50.png - Flujo laminar")
-print("  * regimen_3_CD_0.75.png - Flujo inestable oscilante")
-print("="*70 + "\n")
+console.print("\n" + "="*70, style="bold green")
+console.print(" PROCESO COMPLETADO", style="bold green")
+console.print("="*70 + "\n", style="bold green")
