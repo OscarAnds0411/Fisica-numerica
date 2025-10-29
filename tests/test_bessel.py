@@ -1,28 +1,48 @@
-import unittest
 import math
+import unittest
+
 import numpy as np
+
 from Test import (
-    j_l_up, j_l_down, j_l_miller, j0, j1,
-    sqrt_minus_one_direct, sqrt_minus_one_stable,
-    sin_minus_sin_direct, sin_minus_sin_stable,
-    sqdiff_direct, sqdiff_stable,
-    one_minus_cos_over_sin_direct, one_minus_cos_over_sin_stable,
-    law_of_cos_direct, law_of_cos_stable
+    j0,
+    j1,
+    j_l_down,
+    j_l_miller,
+    j_l_up,
+    law_of_cos_direct,
+    law_of_cos_stable,
+    one_minus_cos_over_sin_direct,
+    one_minus_cos_over_sin_stable,
+    sin_minus_sin_direct,
+    sin_minus_sin_stable,
+    sqdiff_direct,
+    sqdiff_stable,
+    sqrt_minus_one_direct,
+    sqrt_minus_one_stable,
 )
+
 
 class TestBesselFunctions(unittest.TestCase):
 
     def test_j0(self):
         # Test valores conocidos de j0
         self.assertAlmostEqual(j0(0), 1.0, places=7)
-        self.assertAlmostEqual(j0(math.pi), 3.8981718325193755e-17, places=7)  # Valor actualizado
-        self.assertAlmostEqual(j0(2 * math.pi), -3.8981718325193755e-17, places=7)  # Valor actualizado
+        self.assertAlmostEqual(
+            j0(math.pi), 3.8981718325193755e-17, places=7
+        )  # Valor actualizado
+        self.assertAlmostEqual(
+            j0(2 * math.pi), -3.8981718325193755e-17, places=7
+        )  # Valor actualizado
 
     def test_j1(self):
         # Test valores conocidos de j1
         self.assertAlmostEqual(j1(0), 0.0, places=7)
-        self.assertAlmostEqual(j1(math.pi), 0.3183098861837907, places=7)  # Valor actualizado
-        self.assertAlmostEqual(j1(2 * math.pi), 0.15915494309189535, places=7)  # Valor actualizado
+        self.assertAlmostEqual(
+            j1(math.pi), 0.3183098861837907, places=7
+        )  # Valor actualizado
+        self.assertAlmostEqual(
+            j1(2 * math.pi), 0.15915494309189535, places=7
+        )  # Valor actualizado
 
     def test_j_l_up(self):
         # Test recurrencia hacia arriba
@@ -58,6 +78,7 @@ class TestBesselFunctions(unittest.TestCase):
         for l in range(lmax + 1):
             self.assertAlmostEqual(up[l], down[l], places=7)
             self.assertAlmostEqual(up[l], miller[l], places=7)
+
 
 class TestCancellation(unittest.TestCase):
 
@@ -95,6 +116,7 @@ class TestCancellation(unittest.TestCase):
         direct = law_of_cos_direct(a, b, theta)
         stable = law_of_cos_stable(a, b, theta)
         self.assertAlmostEqual(direct, stable, places=7)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,32 +1,32 @@
 from numpy import *
 
-A=array([[1,1,1],[2,1,2],[3,2,4]])
+A = array([[1, 1, 1], [2, 1, 2], [3, 2, 4]])
 
 print("Nuestra matriz A es:\n", A)
-print("="*70)
-a_squared=dot(A,A)
+print("=" * 70)
+a_squared = dot(A, A)
 print("Nuestra matriz A^2 es:\n", a_squared)
-print("="*70)
-a_inv=linalg.inv(A)
+print("=" * 70)
+a_inv = linalg.inv(A)
 print("Nuestra matriz inversa de A es:\n", a_inv)
-print("="*70)
+print("=" * 70)
 print("Buscamos resolver el problema de eigenvalores de la matriz A")
-a_eingen=linalg.eig(A)
+a_eingen = linalg.eig(A)
 print(a_eingen)
-print("="*70)
+print("=" * 70)
 
 
-C=array([[2j,-1+1j],[1+1j,3j]])
+C = array([[2j, -1 + 1j], [1 + 1j, 3j]])
 print("Nuestra matriz C es:\n", C)
-print("="*70)
-c_squared=dot(C,C)
+print("=" * 70)
+c_squared = dot(C, C)
 print("Nuestra matriz C^2 es:\n", c_squared)
-print("="*70)
-c_inv=linalg.inv(C)
+print("=" * 70)
+c_inv = linalg.inv(C)
 print("Nuestra matriz inversa de C es:\n", c_inv)
-print("="*70)
+print("=" * 70)
 print("Buscamos resolver el problema de eigenvalores de la matriz C")
-c_eingen=linalg.eig(C)
+c_eingen = linalg.eig(C)
 print(c_eingen)
 
 
@@ -86,14 +86,9 @@ table.add_column("Eigenvector", style="green")
 for i in range(len(eigenvalues)):
     eigenvalue = eigenvalues[i]
     eigenvector = eigenvectors[:, i]
-    table.add_row(
-        str(i + 1),
-        f"{eigenvalue:.4f}",
-        str(eigenvector)
-    )
+    table.add_row(str(i + 1), f"{eigenvalue:.4f}", str(eigenvector))
 
 console.print(table)
-
 
 
 import pandas as pd
@@ -107,14 +102,14 @@ eigenvalues, eigenvectors = linalg.eig(A)
 # Create a DataFrame for easy formatting
 eigen_df = pd.DataFrame(
     {
-        'Eigenvalue': eigenvalues,
-        'Eigenvector': [eigenvectors[:, i] for i in range(len(eigenvalues))],
+        "Eigenvalue": eigenvalues,
+        "Eigenvector": [eigenvectors[:, i] for i in range(len(eigenvalues))],
     }
 )
 
 # Set pandas display options for a tidy presentation
-pd.set_option('display.float_format', '{:.4f}'.format)
-pd.set_option('display.max_colwidth', None)
+pd.set_option("display.float_format", "{:.4f}".format)
+pd.set_option("display.max_colwidth", None)
 
 print("Eigenvalues and Eigenvectors (using pandas):")
 print(eigen_df)

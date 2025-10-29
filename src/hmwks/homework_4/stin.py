@@ -1,4 +1,4 @@
-""""
+""" "
 Este problema pretende estudiar las
 ocscilaciones de una cuerda. Considere una cuerda de longitud L y
 densidad  (x) por unidad de longitud, atada en ambos extremos y
