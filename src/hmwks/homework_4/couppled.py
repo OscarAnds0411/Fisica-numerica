@@ -21,7 +21,6 @@ repita el proceso del iniciso b, y compare las respuestas del caso lineal y el c
 import os
 
 import numpy as np
-from matplotlib.animation import FuncAnimation
 from pylab import *
 from rich.console import Console
 from rich.table import Table
@@ -33,7 +32,7 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 console = Console()  # Para que se vea bonito
 
-# definimos lo imoortante: las constantes físicas del sistema
+# definimos lo importante: las constantes físicas del sistema
 N = 2000  # numero de pasos
 m = [1.0, 2.0, 0.5]  # masa de los bloques la de 2. va con [4] y la de 0.5 con [5]
 k = [12.0, 10.0, 8.0, 15.0, 10.0, 20.0]  # constante de los resortes externos
@@ -342,14 +341,12 @@ for amp in amplitudes:
         console.print(f"  No lineal: T = {T_nonlin:.4f} s,  f = {f_nonlin:.4f} Hz")
         console.print(f"  Diferencia: {diff:.2f}%")
 
-# ===================================================================
 # TABLA COMPARATIVA
-# ===================================================================
 console.print("\n" + "=" * 70, style="bold magenta")
 console.print(" TABLA COMPARATIVA", style="bold magenta")
 console.print("=" * 70, style="bold magenta")
 
-table = Table(title="Frecuencias vs Amplitud", style="magenta")
+table = Table(title="Frecuencias vs Amplitud", style="red")
 table.add_column("Amplitud (m)", justify="center")
 table.add_column("f Lineal (Hz)", justify="center")
 table.add_column("f No Lineal (Hz)", justify="center")

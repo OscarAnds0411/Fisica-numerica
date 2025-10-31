@@ -2,8 +2,8 @@
 """
 @author: O Valencia
 """
-from matplotlib.pyplot import *
-from numpy import *
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Definición de constantes
 N = 1000  # Número de pasos
@@ -16,20 +16,20 @@ m = 0.5  # Masa de la partícula
 b = 0.1  # Coeficiente de fricción
 
 # Generamos un arreglo de Nx2 para almacenar posición y velocidad
-y = zeros([N, 2])
+y = np.zeros([N, 2])
 # tomamos los valores del estado inicial
 y[0, 0] = x0
 y[0, 1] = v0
 
 # Generamos tiempos igualmente espaciados
-tiempo = linspace(0, tau, N)
+tiempo = np.linspace(0, tau, N)
 
 
 # Definimos nuestra ecuación diferencial
 def EDO(estado, tiempo):
     f0 = estado[1]
     f1 = -(k / m) * estado[0] - (b / m) * estado[1]
-    return array([f0, f1])
+    return np.array([f0, f1])
 
 
 # Método de Euler para  resolver numéricamente la EDO
@@ -49,7 +49,7 @@ for j in range(N - 1):
 xdatos = [y[j, 0] for j in range(N)]
 vdatos = [y[j, 1] for j in range(N)]
 
-fig, axes = subplots(3, 1, figsize=(8, 10))  # 3 rows, 1 column
+fig, axes = plt.subplots(3, 1, figsize=(8, 10))  # 3 rows, 1 column
 axes[0].plot(tiempo, xdatos, "-g")
 axes[0].set_title("Posición vs Tiempo")
 axes[0].set_xlabel("Tiempo (s)")
@@ -63,4 +63,4 @@ axes[2].set_title("Fase espacio")
 axes[2].set_xlabel("Posición (m)")
 axes[2].set_ylabel("Velocidad (m/s)")
 fig.tight_layout()
-show()
+plt.show()

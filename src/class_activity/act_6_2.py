@@ -2,8 +2,8 @@
 """
 @author: O Valencia
 """
-from matplotlib.pyplot import *
-from numpy import *
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Definición de constantes para el oscilador armónico amortiguado y forzado
 # Caso A: dominado por fricción
@@ -19,20 +19,21 @@ f_0 = 0.2  # Amplitud de la fuerza externa
 omega = 0.5  # Frecuencia de la fuerza externa
 
 # Generamos un arreglo de Nx2 para almacenar posición y velocidad
-y = zeros([N, 2])
+y = np.zeros([N, 2])
 # tomamos los valores del estado inicial
 y[0, 0] = x0
 y[0, 1] = v0
 
 # Generamos tiempos igualmente espaciados
-tiempo = linspace(0, tau, N)
+tiempo = np.linspace(0, tau, N)
 
 
 # Definimos nuestra ecuación diferencial
 def EDO(estado, tiempo):
     f0 = estado[1]
-    f1 = -(k / m) * estado[0] - (b / m) * estado[1] + (f_0 / m) * sin(omega * tiempo)
-    return array([f0, f1])
+    f1 = (-(k / m) * estado[0] - (b / m) * estado[1]
+          + (f_0 / m) * np.sin(omega * tiempo))
+    return np.array([f0, f1])
 
 
 # Método de Euler para  resolver numéricamente la EDO
@@ -53,7 +54,7 @@ xdatos = [y[j, 0] for j in range(N)]
 vdatos = [y[j, 1] for j in range(N)]
 
 # Create a figure and two subplots arranged in 1 row and 2 columns
-fig, axes = subplots(2, 3, figsize=(12, 8))  # 2 rows, 1 column
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))  # 2 rows, 1 column
 axes = axes.flatten()
 # caso A: dominado por fricción
 axes[0].plot(xdatos, vdatos, "-b")
@@ -72,7 +73,8 @@ axes[2].set_xlabel("Tiempo (s)")
 axes[2].set_ylabel("Posición (m)")
 
 # caso B: dominado por crecimiento de amplitud
-# Cambiamos la unica constante de interes del oscilador armónico amortiguado y forzado
+# Cambiamos la unica constante de
+# interes del oscilador armónico amortiguado y forzado
 omega = 2.0  # Frecuencia de la fuerza externa
 
 # Ahora calculamos!
@@ -99,5 +101,5 @@ axes[5].set_xlabel("Tiempo (s)")
 axes[5].set_ylabel("Posición (m)")
 
 
-tight_layout()
-show()
+plt.tight_layout()
+plt.show()

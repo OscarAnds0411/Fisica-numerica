@@ -44,8 +44,10 @@ for i in range(50):
     plt.ylim(-1.5, 1.5)  # límites del eje y
 
     # Guardar figura con nombre consecutivo
-    filename = f"figura{i+1:03d}.png"  # Nombres: figura001.png, figura002.png, etc.
-    plt.savefig(filename, dpi=100, bbox_inches="tight")  # guardar figura como PNG
+    # Nombres: figura001.png, figura002.png, etc.
+    filename = f"figura{i+1:03d}.png"
+    # guardar figura como PNG
+    plt.savefig(filename, dpi=100, bbox_inches="tight")
     plt.close()  # cerrar la figura para liberar memoria
 
 print("300 figuras generadas: figura001.png a figura300.png")
@@ -62,8 +64,10 @@ ax.axis("off")
 # Lista para almacenar todos los frames de la animación
 ims = []
 
-# Obtener la lista de archivos PNG en orden alfabético
-# glob('figura0*.png') busca todos los archivos que empiezan con 'figura0' y terminan con '.png'
+# Obtener la lista de
+# archivos PNG en orden alfabético
+# glob('figura0*.png') busca todos los
+# archivos que empiezan con 'figura0' y terminan con '.png'
 for fname in sorted(glob("figura0*.png")):
     # Abrir la imagen usando PIL (Python Imaging Library)
     img = Image.open(fname)

@@ -4,8 +4,8 @@ Created on Wed Nov 10 18:59:19 2021
 
 @author: Prof. Uriarte
 """
-from matplotlib.pyplot import *
-from numpy import *
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Definición de constantes
 N = 1000  # Número de pasos
@@ -17,20 +17,20 @@ k = 2.5  # Constante elástica del resorte
 m = 0.2  # Masa de la partícula
 
 # Generamos un arreglo de Nx2 para almacenar posición y velocidad
-y = zeros([N, 2])
+y = np.zeros([N, 2])
 # tomamos los valores del estado inicial
 y[0, 0] = x0
 y[0, 1] = v0
 
 # Generamos tiempos igualmente espaciados
-tiempo = linspace(0, tau, N)
+tiempo = np.linspace(0, tau, N)
 
 
 # Definimos nuestra ecuación diferencial
 def EDO(estado, tiempo):
     f0 = estado[1]
     f1 = -(k / m) * estado[0]
-    return array([f0, f1])
+    return np.array([f0, f1])
 
 
 # Método de Euler para  resolver numéricamente la EDO
@@ -52,7 +52,7 @@ vdatos = [y[j, 1] for j in range(N)]
 
 # plot(tiempo,xdatos,'-r')
 # plot(tiempo,vdatos,'-b')
-plot(xdatos, vdatos, "-r")
-xlabel("Tiempo")
-ylabel("Posición y velocidad")
-show()
+plt.plot(xdatos, vdatos, "-r")
+plt.xlabel("Tiempo")
+plt.ylabel("Posición y velocidad")
+plt.show()
