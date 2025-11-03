@@ -19,7 +19,6 @@ repita el proceso del iniciso b, y compare las respuestas del caso lineal y el c
 """
 
 import os
-
 import numpy as np
 from pylab import *
 from rich.console import Console

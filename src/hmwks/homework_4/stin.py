@@ -1,122 +1,88 @@
-""" "
-Este problema pretende estudiar las
-ocscilaciones de una cuerda. Considere una cuerda de longitud L y
-densidad  (x) por unidad de longitud, atada en ambos extremos y
-bajo una tensiÛn T (x). Suponga que el desplazamiento relativo de la
-cuerda respecto a su posiciÛn de equilibrio y(x;t)
-L
-es pequeÒo y que la
-
-pendiente de la cuerda @y
-
-@x tambien es pequeÒa.
-
-(a) Considere una secciÛn inÖnitesimal de la cuerda, como se muestra
-
-en la Ögura, note que la diferencia en las componentes de las ten-
-siones en x y x + x tiene por resultado una fuerza restauradora.
-
-Demuestre que al aplicar las leyes de Newton a esta secciÛn obten-
-emos la ecuaciÛn de onda
-
-dT (x)
-dx
-@y (x; t)
-@x + T (x)
-@
-2
-y (x; t)
-@x2
-=  (x)
-@
-2
-y (x; t)
-@t2 (b) øQuÈ condiciones son necesarias para obtener la ecuaciÛn de onda
-est·ndar
-@
-2
-y (x; t)
-@x2
-=
-1
-c
-2
-@
-2
-y (x; t)
-@t2
-; c =
-s
-T
-
-?
-
-(c) øQuÈ condiciones deben cumplirse para obtener una  ̇nica soluciÛn
-a esta EDP de segundo orden?
-(d) Utilice una malla de pasos de longitud t en el tiempo y x en
-el espacio para obtener una soluciÛn numÈrica
-y (x; t) = y (ix; jt) = yi;j :
-
-(e) Exprese las segundas derivadas de la EDP en tÈrminos de difer-
-encias Önitas, demuestre que esto resulta en la ecuaciÛn de onda
-
-en diferencias:
-yi;j+1 + yi;j
-1
-2yi;j
-c
-2
-(t)
-2 =
-
-yi+1;j + yi
-1;j
-2yi;j
-(x)
-2
-:
-(f) Demuestre que el algoritmo anterior puede escribirse como
-
-yi;j+1 = 2yi;j
-yi;j
-1 +
-c
-2
-c
-02
-[yi+1;j + yi
-1;j
-2yi;j ] ;
-
-donde c
-0 =
-x
-t
-es la velocidad de la malla, es decir, la razÛn
-
-numÈrica de los par·metros.
-
-(g) øCÛmo entran las condiciones iniciales y las condiciones de fron-
-tera?
-
-(h) La condiciÛn de Courant para la estabilidad de la soluciÛn es que
-
-c
-c
-0
- 1:
-øquÈ signiÖca en tÈrminos de los pasos?
-
-3
-
-(i) Escriba un programa que implemente la fÛrmula anterior, pro-
-duzca una animaciÛn con el movimiento de la cuerda.
-
-(j) Cambie los pasos del tiempo y el espacio en su programa para
-que algunas veces satisfaga la condiciÛn de Courant y otras no.
-Describa quÈ pasa en cada caso.
-
-Cuando la condiciÛn de Courant se satisface, la simulaciÛn se comporta de manera estable y las ondas en la cuerda se propagan correctamente. Sin embargo, si la condiciÛn de Courant no se satisface, la simulaciÛn puede volverse inestable, lo que resulta en oscilaciones no físicas y un comportamiento errático de la cuerda.
-
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
+Simulación 1D de una cuerda mediante diferencias finitas (esquema explícito)
+Se agrega animación del movimiento de la cuerda en función del tiempo.
+
+Autor: [Tu nombre]
+Fecha: Octubre 2025
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+# ----------------------------
+# Parámetros de la malla
+# ----------------------------
+Nx = 100         # número de puntos espaciales
+Delta_x = 0.01   # paso espacial
+Nt = 250         # número de pasos en tiempo
+Delta_t = 0.01   # paso temporal
+
+# velocidad característica y número de Courant
+c_phys = 0.5 * (Delta_x / Delta_t)
+c0 = Delta_x / Delta_t
+courant = c_phys / c0
+cons = (courant) ** 2
+
+print(f"Delta_x={Delta_x}, Delta_t={Delta_t}, c0={c0:.3f}, c={c_phys:.3f}, Courant={courant:.3f}")
+
+# ----------------------------
+# Inicializar arreglo Yc[i, j] --> posición x tiempo
+# ----------------------------
+Yc = np.zeros((Nx, Nt), dtype=float)
+
+# Condición inicial en t=0
+for i in range(1, Nx - 1):
+    x = i * Delta_x
+    Yc[i, 0] = np.sin(2.0 * np.pi * x)  # forma inicial (puedes cambiarla)
+
+# Paso inicial
+for i in range(1, Nx - 1):
+    Yc[i, 1] = Yc[i, 0] + 0.5 * cons * (
+        Yc[i + 1, 0] + Yc[i - 1, 0] - 2.0 * Yc[i, 0]
+    )
+
+# Evolución temporal
+for n in range(2, Nt):
+    for i in range(1, Nx - 1):
+        Yc[i, n] = (
+            2.0 * Yc[i, n - 1]
+            - Yc[i, n - 2]
+            + cons * (Yc[i + 1, n - 1] + Yc[i - 1, n - 1] - 2.0 * Yc[i, n - 1])
+        )
+
+# ----------------------------
+# Animación 2D
+# ----------------------------
+x = np.linspace(0, (Nx - 1) * Delta_x, Nx)
+
+fig, ax = plt.subplots(figsize=(8, 4))
+line, = ax.plot([], [], lw=2, color='tab:blue')
+ax.set_xlim(0, (Nx - 1) * Delta_x)
+ax.set_ylim(-1.2 * np.max(np.abs(Yc)), 1.2 * np.max(np.abs(Yc)))
+ax.set_xlabel("Posición (m)")
+ax.set_ylabel("Desplazamiento y(x,t)")
+ax.set_title("Animación de la cuerda vibrante")
+
+# Función de inicialización
+def init():
+    line.set_data([], [])
+    return line,
+
+# Función que actualiza cada frame
+def update(frame):
+    line.set_data(x, Yc[:, frame])
+    ax.set_title(f"Tiempo = {frame * Delta_t:.2f} s")
+    return line,
+
+# Crear animación
+anim = FuncAnimation(fig, update, frames=Nt, init_func=init,
+                     blit=True, interval=30, repeat=True)
+
+plt.tight_layout()
+plt.show()
+
+# Si quieres guardar la animación como video:
+# anim.save("cuerda_animacion.mp4", fps=30)
