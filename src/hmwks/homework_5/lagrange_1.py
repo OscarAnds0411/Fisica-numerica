@@ -15,6 +15,7 @@ from numpy.polynomial import Polynomial  # numpy
 from rich.console import Console  # Hay que darle formato a la consola
 from rich.table import Table  # Hay que darle formato a la consola
 from scipy.optimize import brentq
+from rich import box
 
 output_dir = "resultados_tarea_5"
 if not os.path.exists(output_dir):
@@ -183,11 +184,6 @@ f_interpolada = polinomio(E_range)
 # Crear gráfica
 plt.figure(figsize=(12, 7))
 
-# Graficar puntos experimentales con barras de error
-#plt.errorbar(Ei, fE, yerr=sigma, fmt='o', color='red', markersize=8,
-#             capsize=5, capthick=2, elinewidth=2, 
-#             label='Datos medidos', zorder=5)
-
 # Graficar polinomio interpolador
 plt.plot(E_range, f_interpolada, '-', color='blue', linewidth=2.5,
          label='Polinomio de Lagrange', alpha=0.8)
@@ -209,33 +205,68 @@ console.print(f"[green]Gráfica guardada en: {archivo_salida}[/green]")
 
 plt.show()
 
-# ==============================================================================
-# EJEMPLOS DE USO DEL POLINOMIO
-# ==============================================================================
+console.rule("[bold cyan]Análisis de Resonancia[/bold cyan]")
 
-#console.print("\n[bold cyan]Ejemplos de evaluación del polinomio:[/bold cyan]")
+# 1. Encontrar energía de resonancia (máximo)
+E_resonancia, sigma_max = encontrar_resonancia(polinomio, 0, 200)
 
-# Evaluar en algunos puntos
-#puntos_prueba = [30, 60, 90, 120, 150]
-#console.print("\nValores interpolados:")
-#for E_test in puntos_prueba:
-#    sigma_test = polinomio(E_test)
-#    console.print(f"  E = {E_test:3d} MeV  →  σ(E) = {sigma_test:.2f} mb")
+console.print(f"\n[bold green]1. Energía de Resonancia (Er):[/bold green]")
+console.print(f"   Er = {E_resonancia:.2f} MeV")
+console.print(f"   σ(Er) = {sigma_max:.2f} mb (valor máximo)")
 
-# Verificar que el polinomio pasa por los puntos originales
-#console.print("\n[bold green]Verificación (el polinomio debe pasar exactamente por los puntos):[/bold green]")
-#errores_verificacion = []
-#for E_orig, f_orig in zip(Ei, fE):
-#    f_calculada = polinomio(E_orig)
-#    error = abs(f_calculada - f_orig)
-#    errores_verificacion.append(error)
+# 2. Calcular FWHM (Γ)
+FWHM, E_left, E_right = calcular_fwhm(polinomio, E_resonancia, sigma_max, 0, 200)
 
-#error_maximo = max(errores_verificacion)
-#console.print(f"Error máximo en puntos originales: {error_maximo:.2e}")
+console.print(f"\n[bold green]2. Ancho a Media Altura (FWHM = Γ):[/bold green]")
+console.print(f"   Γ = {FWHM:.2f} MeV")
+console.print(f"   σ(Er)/2 = {sigma_max/2:.2f} mb")
+console.print(f"   E_izquierda = {E_left:.2f} MeV")
+console.print(f"   E_derecha = {E_right:.2f} MeV")
 
-#if error_maximo < 1e-8:
-#    console.print("[green]✓ El polinomio pasa exactamente por todos los puntos[/green]")
-#else:
-#    console.print("[yellow]⚠ Hay pequeños errores numéricos (normales en punto flotante)[/yellow]")
+# 3. Valores teóricos
+Er_teorico = 78.0  # MeV
+Gamma_teorico = 55.0  # MeV
+
+console.print(f"\n[bold yellow]3. Valores Teóricos:[/bold yellow]")
+console.print(f"   Er (teórico) = {Er_teorico:.2f} MeV")
+console.print(f"   Γ (teórico) = {Gamma_teorico:.2f} MeV")
+
+# 4. Comparación
+error_Er = abs(E_resonancia - Er_teorico)
+error_Gamma = abs(FWHM - Gamma_teorico)
+error_rel_Er = 100 * error_Er / Er_teorico
+error_rel_Gamma = 100 * error_Gamma / Gamma_teorico
+
+console.print(f"\n[bold magenta]4. Comparación con Teoría:[/bold magenta]")
+console.print(f"   ΔEr = {error_Er:.2f} MeV ({error_rel_Er:.1f}%)")
+console.print(f"   ΔΓ = {error_Gamma:.2f} MeV ({error_rel_Gamma:.1f}%)")
+
+# Tabla comparativa
+console.print("\n")
+tabla_comparacion = Table(title="[bold]Comparación: Experimental vs Teórico[/bold]",
+                         box=box.DOUBLE_EDGE)
+tabla_comparacion.add_column("Parámetro", style="cyan", justify="left")
+tabla_comparacion.add_column("Experimental", style="green", justify="center")
+tabla_comparacion.add_column("Teórico", style="yellow", justify="center")
+tabla_comparacion.add_column("Error Absoluto", style="red", justify="center")
+tabla_comparacion.add_column("Error Relativo", style="magenta", justify="center")
+
+tabla_comparacion.add_row(
+    "Er (MeV)",
+    f"{E_resonancia:.2f}",
+    f"{Er_teorico:.2f}",
+    f"{error_Er:.2f}",
+    f"{error_rel_Er:.1f}%"
+)
+
+tabla_comparacion.add_row(
+    "Γ (MeV)",
+    f"{FWHM:.2f}",
+    f"{Gamma_teorico:.2f}",
+    f"{error_Gamma:.2f}",
+    f"{error_rel_Gamma:.1f}%"
+)
+
+console.print(tabla_comparacion)
 
 console.print("\n[bold green]Programa finalizado exitosamente[/bold green]")
