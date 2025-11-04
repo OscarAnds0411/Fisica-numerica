@@ -8,12 +8,13 @@ Autor: Oscar Valencia
 Fecha: Noviembre 2025
 """
 
-from time import sleep
 from io import StringIO
+from time import sleep
+
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.progress import track
+from rich.table import Table
 
 # Crear una consola principal
 console = Console()
@@ -22,7 +23,9 @@ console = Console()
 console.rule("[bold blue]DEMOSTRACIÓN DE RICH[/bold blue]")
 console.print("Hola [bold green]mundo[/bold green]! 🌎", style="bold white on black")
 console.print("Texto con color hexadecimal", style="#ff8800")
-console.print("Texto con fondo y múltiples estilos", style="bold underline magenta on yellow")
+console.print(
+    "Texto con fondo y múltiples estilos", style="bold underline magenta on yellow"
+)
 
 # --- 2. Panel ---
 panel = Panel(
@@ -60,9 +63,9 @@ for i in track(range(10), description="[yellow]Cargando...[/yellow]"):
     sleep(0.2)
 
 # --- 6. Inspección de objeto ---
-#console.rule("[bold cyan]INSPECCIÓN DE OBJETO[/bold cyan]")
-#data = {"usuario": "Oscar", "rol": "admin", "activo": True}
-#console.inspect(data, methods=True)
+# console.rule("[bold cyan]INSPECCIÓN DE OBJETO[/bold cyan]")
+# data = {"usuario": "Oscar", "rol": "admin", "activo": True}
+# console.inspect(data, methods=True)
 
 # --- 7. Captura de salida ---
 buf = StringIO()
