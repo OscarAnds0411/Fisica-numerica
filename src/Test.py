@@ -70,9 +70,7 @@ def law_of_cos_direct(a, b, theta):
 
 
 def law_of_cos_stable(a, b, theta):
-    return math.sqrt(
-        (a - b) ** 2 + 4.0 * a * b * (math.sin(0.5 * theta) ** 2)
-    )
+    return math.sqrt((a - b) ** 2 + 4.0 * a * b * (math.sin(0.5 * theta) ** 2))
 
 
 def demo_cancellation_examples():
@@ -129,10 +127,7 @@ def demo_cancellation_examples():
         d = law_of_cos_direct(a, b, theta)
         s = law_of_cos_stable(a, b, theta)
         rel_diff = abs(d - s) / max(abs(s), 1e-300)
-        print(
-            f"{a:.1f}\t{b:.12f}\t{theta:.1e}\t"
-            f"{d:.17e}\t{s:.17e}\t{rel_diff:.2e}"
-        )
+        print(f"{a:.1f}\t{b:.12f}\t{theta:.1e}\t" f"{d:.17e}\t{s:.17e}\t{rel_diff:.2e}")
     print("=== fin demo cancelación ===\n")
 
 
@@ -196,8 +191,7 @@ def j_l_miller(x, lmax, pad=60):
     return js
 
 
-def adjust_pad_for_precision(x, lmax, target_rel=1e-10,
-                             pad_start=10, pad_max=2000):
+def adjust_pad_for_precision(x, lmax, target_rel=1e-10, pad_start=10, pad_max=2000):
     pad = pad_start
     prev = j_l_down(x, lmax, pad=pad)
     while pad <= pad_max:
@@ -251,8 +245,13 @@ def compare_methods_with_miller(x, lmax=24, target_rel=1e-10):
     miller = j_l_miller(x, lmax, pad=pad)
 
     header = (
-        "l", "j_up", "j_down", "j_miller",
-        "|up-down|", "|up-miller|", "|down-miller|"
+        "l",
+        "j_up",
+        "j_down",
+        "j_miller",
+        "|up-down|",
+        "|up-miller|",
+        "|down-miller|",
     )
     print("{:<3} {:>15} {:>15} {:>15} {:>15} {:>15} {:>15}".format(*header))
     print("-" * 105)

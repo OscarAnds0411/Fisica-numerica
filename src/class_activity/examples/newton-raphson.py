@@ -6,6 +6,7 @@ Ecuaciones:
 (b) 4cos(θ)^2 = θ^2
 (c) 4sin(θ)^2 = θ^2
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 

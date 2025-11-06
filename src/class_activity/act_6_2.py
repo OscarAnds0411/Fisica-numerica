@@ -31,8 +31,7 @@ tiempo = np.linspace(0, tau, N)
 # Definimos nuestra ecuación diferencial
 def EDO(estado, tiempo):
     f0 = estado[1]
-    f1 = (-(k / m) * estado[0] - (b / m) * estado[1]
-          + (f_0 / m) * np.sin(omega * tiempo))
+    f1 = -(k / m) * estado[0] - (b / m) * estado[1] + (f_0 / m) * np.sin(omega * tiempo)
     return np.array([f0, f1])
 
 

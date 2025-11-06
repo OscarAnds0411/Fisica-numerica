@@ -30,8 +30,7 @@ print("Frame rate = {0:0.3g} frames/s".format(1.0 / dt))  # tasa de fotogramas
 fig, ax = plt.subplots(figsize=(12, 3))  # creamos la figura y los ejes
 # permitir espacio para la etiqueta del eje
 fig.subplots_adjust(bottom=0.2)
-x = np.arange(-5 * a0,
-              rundistance, wavelength / 20.0)  # definimos el rango de x
+x = np.arange(-5 * a0, rundistance, wavelength / 20.0)  # definimos el rango de x
 (line,) = ax.plot(
     x, np.ma.array(x, mask=True), color="r"
 )  # inicializamos la linea de la grafica
