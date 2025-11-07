@@ -348,7 +348,7 @@ console.print(f"\n[bold magenta]4. Comparación con Teoría (SPLINES):[/bold mag
 console.print(f"   ΔEr = {error_Er_spline:.2f} MeV ({error_rel_Er_spline:.1f}%)")
 console.print(f"   ΔΓ = {error_Gamma_spline:.2f} MeV ({error_rel_Gamma_spline:.1f}%)")
 
-f_interpolada = spline(E_range)
+f_spline = spline(E_range)
 
 # Crear gráfica
 plt.figure(figsize=(12, 7))
@@ -356,7 +356,7 @@ plt.figure(figsize=(12, 7))
 # Graficar polinomio interpolador
 plt.plot(
     E_range,
-    f_interpolada,
+    f_spline,
     "-",
     color="blue",
     linewidth=2.5,
@@ -423,46 +423,30 @@ resumen = Panel(
 )
 
 console.print(resumen)
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))  # 3 rows, 1 column
-ax1 = plt.plot(
-    E_range,
-    f_interpolada,
-    "-",
-    color="blue",
-    linewidth=2.5,
-    label="Polinomio de Lagrange",
-    alpha=0.8,
-)
-ax1.plot(Ei, fE, "o", color="red", label="Datos experimentales")
-ax1.xlabel("Energía $E_i$ (MeV)", fontsize=13, fontweight="bold")
-ax1.ylabel(r"Sección eficaz $f(E_i)$ (mb)", fontsize=13, fontweight="bold")
-ax1.title(
-    "Interpolación de Lagrange: Sección Eficaz vs Energía",
-    fontsize=15,
-    fontweight="bold",
-)
-ax1.legend(fontsize=11, loc="best")
-ax1.grid(True, alpha=0.3)
-ax2 = plt.plot(
-    E_range,
-    f_interpolada,
-    "-",
-    color="blue",
-    linewidth=2.5,
-    label="Spline cubico",
-    alpha=0.8,
-)
-ax2.plot(Ei, fE, "o", color="red", label="Datos experimentales")
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-ax2.xlabel("Energía $E_i$ (MeV)", fontsize=13, fontweight="bold")
-ax2.ylabel(r"Sección eficaz $f(E_i)$ (mb)", fontsize=13, fontweight="bold")
-ax2.title(
-    "Interpolación Spline cubica: Sección Eficaz vs Energía",
-    fontsize=15,
-    fontweight="bold",
-)
-ax2.legend(fontsize=11, loc="best")
+# ========== SUBPLOT 1 ==========
+ax1.plot(E_range, f_interpolada, '-', color='blue', linewidth=2.5,
+         label='Polinomio de Lagrange', alpha=0.8)
+ax1.plot(Ei, fE, 'o', color='red', markersize=8,
+         label='Datos experimentales')
+ax1.set_xlabel('Energía $E_i$ (MeV)', fontsize=13, fontweight='bold')
+ax1.set_ylabel(r'Sección eficaz $f(E_i)$ (mb)', fontsize=13, fontweight='bold')
+ax1.set_title('Interpolación de Lagrange', fontsize=15, fontweight='bold')
+ax1.legend(fontsize=11, loc='best')
+ax1.grid(True, alpha=0.3)
+
+# ========== SUBPLOT 2 ==========
+ax2.plot(E_range, f_spline, '-', color='green', linewidth=2.5,
+         label='Spline cúbico', alpha=0.8)
+ax2.plot(Ei, fE, 'o', color='red', markersize=8,
+         label='Datos experimentales')
+ax2.set_xlabel('Energía $E_i$ (MeV)', fontsize=13, fontweight='bold')
+ax2.set_ylabel(r'Sección eficaz $f(E_i)$ (mb)', fontsize=13, fontweight='bold')
+ax2.set_title('Interpolación Spline cúbica', fontsize=15, fontweight='bold')
+ax2.legend(fontsize=11, loc='best')
 ax2.grid(True, alpha=0.3)
-fig.tight_layout()
+
+plt.tight_layout()
 plt.show()
 console.print("\n[bold green]Programa finalizado exitosamente[/bold green]")
