@@ -5,7 +5,6 @@ Oscar Valencia
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
 
 def hubble_function(r,a,H):
     return a+H*r
