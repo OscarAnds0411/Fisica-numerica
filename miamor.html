@@ -1,0 +1,158 @@
+SET @Cuerpo = '
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- checa si UTF-8 esta bien o debe ser otro -->
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Le agregamos Css pq con css la vida es mejor  -->
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            color: #333333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .email-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+        }
+        .header {
+            background-color: #d32f2f;
+            color: #ffffff;
+            padding: 20px 30px;
+            border-bottom: 4px solid #b71c1c;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: normal;
+        }
+        .content {
+            padding: 30px;
+        }
+        .info-section {
+            background-color: #f9f9f9;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+        }
+        .info-section h2 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #d32f2f;
+            font-weight: 600;
+        }
+        .info-section p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555555;
+        }
+        .info-section strong {
+            color: #000000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        thead {
+            background-color: #ffd700;
+        }
+        th {
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #000000;
+            border: 1px solid #cccccc;
+            font-size: 12px;
+        }
+        td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #dddddd;
+            color: #333333;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tbody tr:hover {
+            background-color: #fff3cd;
+        }
+        .monto-cero {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+        .footer {
+            background-color: #f4f4f4;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+            border-top: 1px solid #dddddd;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333333;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        
+        <div class="header">
+            <h1>SITEL - Error Detectado en Cruce</h1>
+        </div>
+        
+        <div class="content">
+            
+            <div class="info-section">
+                <h2>Error de casetas en cruces - Detecta monto en cero</h2>
+                <p>Se detecta monto en cero de los siguientes cruces</p>
+                <p><strong>Fecha de notificación:</strong> ' + CONVERT(VARCHAR(20), GETDATE(), 120) + '</p>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>CRUCE</th>
+                        <th>FECHA CRUCE</th>
+                        <th>TAG</th>
+                        <th>CARRIL</th>
+                        <th>CASETA</th>
+                        <th>MONTO</th>
+                        <th>CLASE VEHICULAR</th>
+                        <th>SITUACIÓN CRUCE</th>
+                        <th>FECHA INSERTA</th>
+                    </tr>
+                </thead>
+                <tbody>';
+
+-- Aquí van las filas dinámicas
+-- @filashtml
+
+SET @Cuerpo = @Cuerpo + ISNULL(@FilasHTML, '') + '
+                </tbody>
+            </table>
+            
+            <div class="total-section">
+                Total de errores: ' + CAST((SELECT COUNT(*) FROM #alertas) AS VARCHAR(10)) + '
+            </div>
+            
+        </div>
+        <!-- Esto lo vas a dejar? -->
+        <div class="footer">
+            <p>Este es un correo automático generado por el sistema. No responder.</p>
+        </div>
+        
+    </div>
+</body>
+</html>';

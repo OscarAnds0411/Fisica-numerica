@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<!-- Declaración del tipo de documento HTML5 -->
+
+<html lang="es">
+<!-- Etiqueta raíz del documento, lang="es" indica que el contenido está en español -->
+
+<head>
+    <!-- Sección HEAD: Contiene metadatos y configuración que no se muestra en la página -->
+    
+    <meta charset="UTF-8">
+    <!-- Define la codificación de caracteres UTF-8 para soportar tildes y caracteres especiales -->
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Hace que la página sea responsive (se adapte a diferentes tamaños de pantalla) -->
+    <!-- width=device-width: el ancho de la página será igual al ancho del dispositivo -->
+    <!-- initial-scale=1.0: zoom inicial al 100% -->
+    
+    <title>SITEL - ERROR DETECTADO EN CRUCE</title>
+    <!-- Título que aparece en la pestaña del navegador -->
+    
+    <style>
+        /* 
+           SECCIÓN CSS - ESTILOS DE LA PÁGINA
+         */
+        
+        /* Estilos para el body (cuerpo de la página) */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            /* Define la fuente de texto. Si Arial no está disponible, usa Helvetica, 
+               y si tampoco, usa cualquier fuente sans-serif del sistema */
+            
+            font-size: 14px;
+            /* Tamaño de letra base de 14 píxeles */
+            
+            color: #333333;
+            /* Color del texto en hexadecimal: gris oscuro */
+            
+            background-color: #f4f4f4;
+            /* Color de fondo del body: gris muy claro */
+            
+            margin: 0;
+            /* Elimina el margen exterior por defecto del navegador */
+            
+            padding: 20px;
+            /* Añade espacio interior de 20px en todos los lados */
+        }
+        
+        /* Contenedor principal del email */
+        .email-container {
+            /* El punto (.) indica que es una CLASE CSS que se puede aplicar a cualquier elemento */
+            
+            max-width: 1200px;
+            /* Ancho máximo de 1200 píxeles. Si la pantalla es más grande, 
+               el contenedor no crecerá más de este tamaño */
+            
+            margin: 0 auto;
+            /* margin: 0 (arriba/abajo) auto (izquierda/derecha) 
+               "auto" centra horizontalmente el contenedor */
+            
+            background-color: #ffffff;
+            /* Fondo blanco puro */
+            
+            border: 1px solid #dddddd;
+            /* Borde de 1px de grosor, línea sólida, color gris claro */
+        }
+        
+        /* Encabezado (header) del correo */
+        .header {
+            background-color: #d32f2f;
+            /* Color de fondo rojo oscuro */
+            
+            color: #ffffff;
+            /* Color del texto blanco para contrastar con el fondo rojo */
+            
+            padding: 20px 30px;
+            /* padding: 20px (arriba/abajo) 30px (izquierda/derecha) */
+            
+            border-bottom: 4px solid #b71c1c;
+            /* Borde inferior de 4px de grosor, sólido, color rojo más oscuro 
+               Esto crea un efecto de profundidad */
+        }
+        
+        /* Título H1 dentro del header */
+        .header h1 {
+            margin: 0;
+            /* Elimina los márgenes por defecto del h1 */
+            
+            font-size: 22px;
+            /* Tamaño de letra de 22 píxeles */
+            
+            font-weight: normal;
+            /* Peso de la fuente normal (no negrita) */
+        }
+        
+        /* Área de contenido principal */
+        .content {
+            padding: 30px;
+            /* Espacio interior de 30px en todos los lados */
+        }
+        
+        /* Sección de información destacada (cuadro amarillo) */
+        .info-section {
+            background-color: #f9f9f9;
+            /* Fondo gris muy claro, casi blanco */
+            
+            border-left: 4px solid #ffc107;
+            /* Borde izquierdo de 4px color amarillo/ámbar 
+               Esto crea un efecto visual de "acento" en el lado izquierdo */
+            
+            padding: 15px 20px;
+            /* padding: 15px (arriba/abajo) 20px (izquierda/derecha) */
+            
+            margin-bottom: 25px;
+            /* Espacio de 25px debajo de esta sección para separarla del contenido siguiente */
+        }
+        
+        /* Título H2 dentro de info-section */
+        .info-section h2 {
+            margin: 0 0 10px 0;
+            /* margin: 0 (arriba) 0 (derecha) 10px (abajo) 0 (izquierda) 
+               Solo añade margen inferior de 10px */
+            
+            font-size: 16px;
+            /* Tamaño de letra de 16 píxeles */
+            
+            color: #d32f2f;
+            /* Color rojo para destacar */
+            
+            font-weight: 600;
+            /* Peso de fuente 600 (semi-negrita, más grueso que normal pero menos que bold) */
+        }
+        
+        /* Párrafos dentro de info-section */
+        .info-section p {
+            margin: 5px 0;
+            /* margin: 5px (arriba/abajo) 0 (izquierda/derecha) */
+            
+            font-size: 14px;
+            /* Tamaño de letra de 14 píxeles */
+            
+            color: #555555;
+            /* Color gris medio */
+        }
+        
+        /* Elementos STRONG (negrita) dentro de info-section */
+        .info-section strong {
+            color: #000000;
+            /* Color negro para mayor contraste y énfasis */
+        }
+        
+        /* Estilos para la TABLA */
+        table {
+            width: 100%;
+            /* La tabla ocupará el 100% del ancho de su contenedor */
+            
+            border-collapse: collapse;
+            /* Colapsa los bordes de las celdas para que no haya espacio entre ellos 
+               Sin esto, cada celda tendría su propio borde separado */
+            
+            margin: 20px 0;
+            /* margin: 20px (arriba/abajo) 0 (izquierda/derecha) 
+               Añade espacio de 20px arriba y abajo de la tabla */
+            
+            font-size: 13px;
+            /* Tamaño de letra de 13 píxeles para la tabla */
+        }
+        
+        /* THEAD - Encabezado de la tabla */
+        thead {
+            background-color: #ffd700;
+            /* Fondo amarillo dorado para destacar los encabezados */
+        }
+        
+        /* TH - Celdas de encabezado (títulos de columnas) */
+        th {
+            padding: 12px 8px;
+            /* padding: 12px (arriba/abajo) 8px (izquierda/derecha) */
+            
+            text-align: center;
+            /* Alinea el texto al centro de la celda */
+            
+            font-weight: 600;
+            /* Peso de fuente semi-negrita */
+            
+            color: #000000;
+            /* Color del texto negro */
+            
+            border: 1px solid #cccccc;
+            /* Borde de 1px sólido color gris claro alrededor de cada celda */
+            
+            font-size: 12px;
+            /* Tamaño de letra de 12 píxeles (más pequeño que el contenido) */
+        }
+        
+        /* TD - Celdas de datos (contenido de la tabla) */
+        td {
+            padding: 10px 8px;
+            /* padding: 10px (arriba/abajo) 8px (izquierda/derecha) */
+            
+            text-align: center;
+            /* Alinea el texto al centro */
+            
+            border: 1px solid #dddddd;
+            /* Borde de 1px sólido color gris claro */
+            
+            color: #333333;
+            /* Color del texto gris oscuro */
+        }
+        
+        /* Selector pseudo-clase: nth-child(even) selecciona las filas PARES */
+        tbody tr:nth-child(even) {
+            /* tbody = cuerpo de la tabla, tr = fila */
+            /* nth-child(even) = cada hijo par (2do, 4to, 6to, etc.) */
+            
+            background-color: #f9f9f9;
+            /* Fondo gris muy claro para crear un efecto de "cebra" 
+               Esto mejora la legibilidad al alternar colores entre filas */
+        }
+        
+        /* Selector pseudo-clase: hover se activa cuando el mouse pasa sobre el elemento */
+        tbody tr:hover {
+            /* Aplica estos estilos cuando el mouse está sobre una fila */
+            
+            background-color: #fff3cd;
+            /* Cambia el fondo a amarillo claro cuando pasas el mouse */
+            /* Esto proporciona feedback visual al usuario */
+        }
+        
+        /* Clase especial para destacar el monto en cero */
+        .monto-cero {
+            color: #d32f2f;
+            /* Color rojo para llamar la atención */
+            
+            font-weight: 600;
+            /* Texto semi-negrita para mayor énfasis */
+        }
+        
+        /* Pie de página (footer) del correo */
+        .footer {
+            background-color: #f4f4f4;
+            /* Fondo gris claro */
+            
+            padding: 15px 30px;
+            /* padding: 15px (arriba/abajo) 30px (izquierda/derecha) */
+            
+            text-align: center;
+            /* Centra el texto */
+            
+            font-size: 12px;
+            /* Tamaño de letra pequeño de 12 píxeles */
+            
+            color: #666666;
+            /* Color gris medio */
+            
+            border-top: 1px solid #dddddd;
+            /* Borde superior de 1px para separar visualmente del contenido */
+        }
+        
+        /* Sección que muestra el total de errores */
+        .total-section {
+            text-align: right;
+            /* Alinea el texto a la derecha */
+            
+            margin-top: 15px;
+            /* Espacio de 15px en la parte superior */
+            
+            font-size: 14px;
+            /* Tamaño de letra de 14 píxeles */
+            
+            font-weight: 600;
+            /* Texto semi-negrita */
+            
+            color: #333333;
+            /* Color gris oscuro */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ==========================================
+         CONTENIDO VISIBLE DE LA PÁGINA (BODY)
+         ========================================== -->
+    
+    <!-- DIV: Contenedor principal que agrupa todo el email -->
+    <div class="email-container">
+        <!-- class="email-container" aplica los estilos CSS definidos para .email-container -->
+        
+        <!-- SECCIÓN: ENCABEZADO (HEADER) -->
+        <div class="header">
+            <!-- Aplica los estilos de la clase .header -->
+            
+            <h1>SITEL - Error Detectado en Cruce</h1>
+            <!-- H1: Encabezado de nivel 1 (el título más importante) -->
+        </div>
+        
+        <!-- SECCIÓN: CONTENIDO PRINCIPAL -->
+        <div class="content">
+            <!-- Aplica los estilos de la clase .content -->
+            
+            <!-- SUB-SECCIÓN: Información del error (cuadro amarillo) -->
+            <div class="info-section">
+                <!-- Aplica los estilos de la clase .info-section -->
+                
+                <h2>Error de casetas en cruces - Detecta monto en cero</h2>
+                <!-- H2: Encabezado de nivel 2 (subtítulo) -->
+                
+                <p>Se detecta monto en cero de los siguientes cruces</p>
+                <!-- P: Párrafo de texto -->
+                
+                <p>
+                    <strong>Fecha de notificación:</strong> 2025-11-13 12:53:46
+                    <!-- STRONG: Hace el texto en negrita para dar énfasis -->
+                </p>
+            </div>
+            
+            <!-- TABLA CON LOS REGISTROS DE ERROR -->
+            <table>
+                <!-- Inicia la estructura de la tabla -->
+                
+                <!-- THEAD: Encabezado de la tabla (títulos de columnas) -->
+                <thead>
+                    <tr>
+                        <!-- TR: Table Row (fila de la tabla) -->
+                        
+                        <!-- TH: Table Header (celda de encabezado) -->
+                        <th>CRUCE</th>
+                        <th>FECHA CRUCE</th>
+                        <th>TAG</th>
+                        <th>CARRIL</th>
+                        <th>CASETA</th>
+                        <th>MONTO</th>
+                        <th>CLASE VEHICULAR</th>
+                        <th>SITUACIÓN CRUCE</th>
+                        <th>FECHA INSERTA</th>
+                    </tr>
+                </thead>
+                
+                <!-- TBODY: Cuerpo de la tabla (datos) -->
+                <tbody>
+                    <!-- Cada TR representa una fila de datos -->
+                    
+                    <!-- FILA 1 -->
+                    <tr>
+                        <!-- TD: Table Data (celda de datos) -->
+                        <td><strong>11856773</strong></td>
+                        <!-- STRONG dentro de TD hace el ID del cruce en negrita -->
+                        
+                        <td>2025-11-13 10:00:00</td>
+                        <td>IMDM28400927</td>
+                        <td>57</td>
+                        <td>LA FINCA (AUXILIAR)</td>
+                        <td>
+                            <span class="monto-cero">$0.00</span>
+                            <!-- SPAN: Contenedor inline para aplicar estilos específicos 
+                                 class="monto-cero" aplica color rojo y negrita -->
+                        </td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:00:25</td>
+                    </tr>
+                    
+                    <!-- FILA 2 -->
+                    <tr>
+                        <td><strong>11856783</strong></td>
+                        <td>2025-11-13 10:03:14</td>
+                        <td>IMDM27359040</td>
+                        <td>51</td>
+                        <td>ENTRONQUE PEÑON</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:03:52</td>
+                    </tr>
+                    
+                    <!-- FILA 3 -->
+                    <tr>
+                        <td><strong>11856785</strong></td>
+                        <td>2025-11-13 10:04:12</td>
+                        <td>IMDM26067352</td>
+                        <td>40</td>
+                        <td>SANTA FE 1</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:04:41</td>
+                    </tr>
+                    
+                    <!-- FILA 4 -->
+                    <tr>
+                        <td><strong>11856787</strong></td>
+                        <td>2025-11-13 10:04:53</td>
+                        <td>IMDM22230732</td>
+                        <td>63</td>
+                        <td>SAN ANGEL ZURUMCAPIO</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:05:16</td>
+                    </tr>
+                    
+                    <!-- FILA 5 -->
+                    <tr>
+                        <td><strong>11856795</strong></td>
+                        <td>2025-11-13 10:07:22</td>
+                        <td>VPAS00664500</td>
+                        <td>32</td>
+                        <td>ARMERÍA</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>CAMION 9 EJES</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:08:09</td>
+                    </tr>
+                    
+                    <!-- FILA 6 -->
+                    <tr>
+                        <td><strong>11856774</strong></td>
+                        <td>2025-11-13 10:00:22</td>
+                        <td>IMDM29426636</td>
+                        <td>56</td>
+                        <td>LA FINCA</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:00:33</td>
+                    </tr>
+                    
+                    <!-- FILA 7 -->
+                    <tr>
+                        <td><strong>11856798</strong></td>
+                        <td>2025-11-13 10:09:15</td>
+                        <td>IMDM31245789</td>
+                        <td>45</td>
+                        <td>TLALPAN</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:09:45</td>
+                    </tr>
+                    
+                    <!-- FILA 8 -->
+                    <tr>
+                        <td><strong>11856801</strong></td>
+                        <td>2025-11-13 10:11:30</td>
+                        <td>IMDM19876543</td>
+                        <td>28</td>
+                        <td>CUERNAVACA</td>
+                        <td><span class="monto-cero">$0.00</span></td>
+                        <td>AUTOMOVIL</td>
+                        <td>ERROR DE CRUCE CERRADO</td>
+                        <td>2025-11-13 10:12:01</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- SECCIÓN: Total de errores -->
+            <div class="total-section">
+                Total de errores: 8
+            </div>
+            
+        </div>
+        <!-- Cierre del div content -->
+        
+        <!-- SECCIÓN: PIE DE PÁGINA (FOOTER) -->
+        <div class="footer">
+            <p>Este es un correo automático generado por el sistema. No responder.</p>
+        </div>
+        
+    </div>
+    <!-- Cierre del div email-container -->
+    
+</body>
+</html>
