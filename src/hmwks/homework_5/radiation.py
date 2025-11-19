@@ -273,13 +273,11 @@ try:
     nu_suave = np.linspace(nu.min(), nu.max(), 1000)
     I_suave = planck_model(nu_suave, T_fit)
     
-    # Crear figura con 4 subplots
+    # Crear figura con 3 subplots
     fig = plt.figure(figsize=(18, 12))
-    gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
+    gs = fig.add_gridspec(1, 3, hspace=0.3, wspace=0.3)
     
-    # ==================================================================
     # Subplot 1: Datos y ajuste
-    # ==================================================================
     
     ax1 = fig.add_subplot(gs[0, 0])
     
@@ -304,11 +302,9 @@ try:
     ax1.legend(fontsize=10, loc='upper right')
     ax1.grid(True, alpha=0.3)
     
-    # ==================================================================
     # Subplot 2: Escala log-log
-    # ==================================================================
     
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = fig.add_subplot(gs[0,1])
     
     ax2.errorbar(nu, I_nu_T, yerr=sigma, fmt='o', color='red', markersize=7,
                 capsize=5, elinewidth=2, capthick=2,
@@ -325,33 +321,9 @@ try:
     ax2.legend(fontsize=10, loc='upper left')
     ax2.grid(True, alpha=0.3, which='both')
     
-    # ==================================================================
-    # Subplot 3: Residuos
-    # ==================================================================
+    # Subplot 3: Comparación con otras temperaturas
     
-    ax3 = fig.add_subplot(gs[1, 0])
-    
-    ax3.errorbar(nu, residuos_normalizados, yerr=1.0, fmt='o', color='purple',
-                markersize=7, capsize=5, elinewidth=2, capthick=2)
-    
-    ax3.axhline(0, color='blue', linestyle='-', linewidth=2, alpha=0.7)
-    ax3.axhline(2, color='gray', linestyle='--', linewidth=1, alpha=0.5, label='±2σ')
-    ax3.axhline(-2, color='gray', linestyle='--', linewidth=1, alpha=0.5)
-    ax3.axhline(3, color='red', linestyle=':', linewidth=1, alpha=0.5, label='±3σ')
-    ax3.axhline(-3, color='red', linestyle=':', linewidth=1, alpha=0.5)
-    
-    ax3.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=13, fontweight='bold')
-    ax3.set_ylabel('Residuos Normalizados', fontsize=13, fontweight='bold')
-    ax3.set_title(f'Análisis de Residuos (χ²_red = {chi2_reducido:.3f})', 
-                 fontsize=15, fontweight='bold')
-    ax3.legend(fontsize=10)
-    ax3.grid(True, alpha=0.3)
-    
-    # ==================================================================
-    # Subplot 4: Comparación con otras temperaturas
-    # ==================================================================
-    
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = fig.add_subplot(gs[0,2])
     
     # Datos
     ax4.errorbar(nu, I_nu_T, yerr=sigma, fmt='o', color='red', markersize=7,
@@ -420,7 +392,7 @@ try:
     console.print(panel)
 
 except Exception as e:
-    print(f"\n✗ Error en el ajuste: {e}")
+    print(f"\nD: Error en el ajuste: {e}")
     print("\nPosibles soluciones:")
     print("  1. Verificar que los datos estén en el formato correcto")
     print("  2. Ajustar el valor inicial de temperatura")
