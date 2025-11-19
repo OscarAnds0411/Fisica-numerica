@@ -247,16 +247,16 @@ V_ajustado=dec_exp(t_dom,v_0_linear,tau_linear)
 plt.plot(t_dom,V_ajustado, '-', color ='b', linewidth =2.5,
          label=f'Ajuste: V₀={v_0_linear:.3f} V, τ={tau_linear:.3f} ms⁻¹', alpha=0.8)
 plt.plot(ttime , voltage, 'o', color ='r', linewidth =2.5,
-         label=f'Ajuste: V₀={v_0_linear:.3f} V, τ={tau_linear:.3f} ms⁻¹', alpha=0.8)
+         label=f'Datos experimentales', alpha=0.8)
 plt.yscale('log')
 plt.xlabel('Tiempo t (ms)', fontsize=13, fontweight='bold')
 plt.ylabel('log(Voltaje V(t)) (V)', fontsize=13, fontweight='bold')
 plt.title('Gráfica Semi-Log (Requerida)', fontsize=15, fontweight='bold')
 plt.legend(fontsize=10, loc='upper right')
 plt.grid(True, alpha=0.3, which='both')
-plt.show()
 filename = f"{output_dir}/grafico_semilog_RLC.png"
 plt.savefig(filename, dpi = 300, bbox_inches="tight")
+plt.show()
 console.print("[bold green] Grafico guardado: ", filename)
 # popt, pcov = curve_fit(
 #     dec_exp, ttime, 
