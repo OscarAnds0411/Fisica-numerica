@@ -376,7 +376,7 @@ try:
     
     Bondad del ajuste:
     * χ²_reducido = {chi2_reducido:.4f}
-    * {'Excelente ajuste' if 0.5 <= chi2_reducido <= 2.0 else '⚠ Revisar ajuste'}
+    * {'Excelente ajuste' if 0.5 <= chi2_reducido <= 2.0 else '!!!!!!! Revisar ajuste'}
     
     Interpretación:
     * La temperatura de ~2.7 K es una reliquia del Big Bang

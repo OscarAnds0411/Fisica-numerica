@@ -264,9 +264,6 @@ console.print("[bold green] Grafico guardado: ", filename)
 #     sigma = uncer, absolute_sigma=True)
 # errores = np.sqrt(np.diag(pcov))
 # sigma_V=errores[0]
-# ==============================================================================
-# RESUMEN FINAL
-# ==============================================================================
 
 console.print("\n")
 console.rule("[bold green]RESUMEN DE RESULTADOS[/bold green]")
@@ -285,15 +282,15 @@ resumen = f"""[bold cyan](a) Parámetros ajustados con incertidumbres:[/bold cya
 
 [bold cyan](c) Gráfica semi-log:[/bold cyan]
 
-    ✓ Generada
-    ✓ En escala semi-log, el decaimiento exponencial es una línea recta
-    ✓ Pendiente = -τ = {-tau_linear:.4f} ms⁻¹
+    :D Generada
+    :D En escala semi-log, el decaimiento exponencial es una línea recta
+    :D Pendiente = -τ = {-tau_linear:.4f} ms⁻¹
 
 [bold cyan]Interpretación física:[/bold cyan]
 
-    • Constante de tiempo: T = {T_constante:.4f} ms
-    • Vida media: t_1/2 = {t_media:.4f} ms
-    • Relación: τ = R/L
+    * Constante de tiempo: T = {T_constante:.4f} ms
+    * Vida media: t_1/2 = {t_media:.4f} ms
+    * Relación: τ = R/L
 """
 
 panel = Panel(

@@ -16,7 +16,6 @@ from matplotlib.animation import PillowWriter
 from typing import Callable, Tuple
 import os
 
-
 # Si bien no hemos visto nada de esto, quiero practicar para ya ponerme a trabajar
 # por lo que se me hizo mucho mas facil construir una clase para ya no repetir codigo
 class CuerdaVibrante:

@@ -167,10 +167,10 @@ y = v.to_numpy()
 sc = w.to_numpy()
 
 # semilla inicial (estimada de los datos)
-idx_max = np.argmax(y)          # Índice del máximo
+idx_max = np.argmax(y)         # Índice del máximo
 E_r_inicial = x[idx_max]        # Energía donde ocurre el máximo (~75 MeV)
-f_max = y[idx_max]              # Valor máximo (~83.5 mb)
-Gamma_inicial = 50.0            # Estimación razonable del ancho
+f_max = y[idx_max]         # Valor máximo (~83.5 mb)
+Gamma_inicial = 50.0          # Estimación razonable del ancho
 
 a_0 = np.array([
     f_max * Gamma_inicial,      # a1 = f_r·Γ ≈ 83.5 * 50 = 4175
