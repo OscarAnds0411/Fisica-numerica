@@ -21,9 +21,10 @@ from rich import box
 
 cons = Console()
 
+
 def simular_anios_hasta_embarazo(n, p=0.3):
     """
-    Simula n experimentos donde cada experimento consiste en 
+    Simula n experimentos donde cada experimento consiste en
     contar cuántos años pasan antes de quedar embarazada.
     """
     resultados = []
@@ -36,11 +37,12 @@ def simular_anios_hasta_embarazo(n, p=0.3):
                 break
     return np.array(resultados)
 
+
 # Valores de n solicitados
 ns = [1000, 10000, 100000]
-s=0
-while s <= 9: 
-    cons.rule("[bold green] Simulación de años hasta un embarazo número "+ str(s+1))
+s = 0
+while s <= 9:
+    cons.rule("[bold green] Simulación de años hasta un embarazo número " + str(s + 1))
     table = Table(title="[bold cyan] Simulaciones [/bold cyan]", box=box.ROUNDED)
     table.add_column("n", justify="right", style="cyan", no_wrap=True)
     table.add_column("Media (años)", justify="right", style="magenta")
@@ -53,4 +55,4 @@ while s <= 9:
         table.add_row(str(n), f"{media:.4f}", f"{std:.4f}")
 
     cons.print(table)
-    s +=1
+    s += 1

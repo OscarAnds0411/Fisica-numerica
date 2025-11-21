@@ -32,28 +32,29 @@ console.rule("[bold red]AJUSTE DEL ESPECTRO DE CUERPO NEGRO - CMB (COBE)[/bold r
 # CONSTANTES FÍSICAS
 # ==============================================================================
 
-h_planck = 6.62607015e-34    # J·s
-c_light = 2.99792458e8       # m/s
-k_boltz = 1.380649e-23       # J/K
+h_planck = 6.62607015e-34  # J·s
+c_light = 2.99792458e8  # m/s
+k_boltz = 1.380649e-23  # J/K
 
 const = f"""[bold yellow]Valores exactos de CODATA 2018[/bold yellow]
     h = {h_planck:.6e} J·s
     c = {c_light:.6e} m/s
     k = {k_boltz:.6e} J/K
 """
-panel = Panel(const, title="[bold]Constantes Físicas[/bold]",
-              border_style="green", box=box.DOUBLE)
+panel = Panel(
+    const, title="[bold]Constantes Físicas[/bold]", border_style="green", box=box.DOUBLE
+)
 console.print(panel)
 
 # ==============================================================================
 # CARGAR DATOS
 # ==============================================================================
 
-datos = pd.read_csv('Datos_cuerpo_negro.txt', sep=r'\s+')
+datos = pd.read_csv("Datos_cuerpo_negro.txt", sep=r"\s+")
 
-nu = datos['nu(I)'].values
-I_nu_T = datos['I(nu_T)'].values
-error_kJy = datos['Error'].values
+nu = datos["nu(I)"].values
+I_nu_T = datos["I(nu_T)"].values
+error_kJy = datos["Error"].values
 
 # Convertir error a MJy/sr
 sigma_original = error_kJy / 1000.0
@@ -70,7 +71,9 @@ error_rel = np.mean(sigma_original / I_nu_T) * 100
 console.print(f"\nError relativo promedio: {error_rel:.2f}%")
 
 # Mostrar rango de errores
-console.print(f"Rango de σ: {sigma_original.min():.3f} - {sigma_original.max():.3f} MJy/sr")
+console.print(
+    f"Rango de σ: {sigma_original.min():.3f} - {sigma_original.max():.3f} MJy/sr"
+)
 console.print(f"Rango de I: {I_nu_T.min():.3f} - {I_nu_T.max():.3f} MJy/sr")
 
 # Si los errores son muy pequeños (<1% promedio), indica que pueden estar subestimados
@@ -93,20 +96,22 @@ console.print(table)
 # LEY DE PLANCK
 # ==============================================================================
 
+
 def planck_model(nu_cm, T):
     """
     Ley de Planck: I(ν,T) = (2hν³/c²) · 1/(exp(hν/kT) - 1)
     """
     nu_Hz = nu_cm * c_light * 100  # cm⁻¹ → Hz
     x = (h_planck * nu_Hz) / (k_boltz * T)
-    
+
     numerador = 2 * h_planck * nu_Hz**3 / (c_light**2)
     denominador = np.expm1(x)  # exp(x) - 1
-    
+
     I_SI = numerador / denominador  # W·m⁻²·sr⁻¹·Hz⁻¹
     I_MJy = I_SI * 1e20  # MJy/sr
-    
+
     return I_MJy
+
 
 # ==============================================================================
 # ANÁLISIS VISUAL PRELIMINAR
@@ -134,25 +139,45 @@ console.print(f"[green]  T ≈ {T_wien:.2f} K[/green]")
 # Gráfica preliminar
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-ax1.errorbar(nu, I_nu_T, yerr=sigma_original, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', alpha=0.7)
-ax1.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax1.set_ylabel('Intensidad I(ν,T) (MJy/sr)', fontsize=12, fontweight='bold')
-ax1.set_title('Datos del COBE - CMB', fontsize=14, fontweight='bold')
+ax1.errorbar(
+    nu,
+    I_nu_T,
+    yerr=sigma_original,
+    fmt="o",
+    color="red",
+    markersize=7,
+    capsize=5,
+    elinewidth=2,
+    capthick=2,
+    label="Datos COBE",
+    alpha=0.7,
+)
+ax1.set_xlabel("Frecuencia ν (cm⁻¹)", fontsize=12, fontweight="bold")
+ax1.set_ylabel("Intensidad I(ν,T) (MJy/sr)", fontsize=12, fontweight="bold")
+ax1.set_title("Datos del COBE - CMB", fontsize=14, fontweight="bold")
 ax1.legend()
 ax1.grid(True, alpha=0.3)
 
-ax2.errorbar(nu, I_nu_T, yerr=sigma_original, fmt='o', color='green',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', alpha=0.7)
-ax2.set_xscale('log')
-ax2.set_yscale('log')
-ax2.set_xlabel('log(Frecuencia ν) (cm⁻¹)', fontsize=12, fontweight='bold')
-ax2.set_ylabel('log(Intensidad I(ν,T)) (MJy/sr)', fontsize=12, fontweight='bold')
-ax2.set_title('Escala Log-Log', fontsize=14, fontweight='bold')
+ax2.errorbar(
+    nu,
+    I_nu_T,
+    yerr=sigma_original,
+    fmt="o",
+    color="green",
+    markersize=7,
+    capsize=5,
+    elinewidth=2,
+    capthick=2,
+    label="Datos COBE",
+    alpha=0.7,
+)
+ax2.set_xscale("log")
+ax2.set_yscale("log")
+ax2.set_xlabel("log(Frecuencia ν) (cm⁻¹)", fontsize=12, fontweight="bold")
+ax2.set_ylabel("log(Intensidad I(ν,T)) (MJy/sr)", fontsize=12, fontweight="bold")
+ax2.set_title("Escala Log-Log", fontsize=14, fontweight="bold")
 ax2.legend()
-ax2.grid(True, alpha=0.3, which='both')
+ax2.grid(True, alpha=0.3, which="both")
 
 plt.tight_layout()
 filename = f"{output_dir}/01_datos_preliminares.png"
@@ -175,11 +200,13 @@ console.print("[cyan]═══════════════════�
 
 # Ajuste 1: Con errores originales
 popt1, pcov1 = curve_fit(
-    planck_model, nu, I_nu_T,
+    planck_model,
+    nu,
+    I_nu_T,
     p0=[T_wien],
     sigma=sigma_original,
     absolute_sigma=True,
-    maxfev=10000
+    maxfev=10000,
 )
 
 T_fit1 = popt1[0]
@@ -222,11 +249,13 @@ console.print(f"[yellow]  σ_nuevo = {factor_escalamiento:.3f} × σ_original[/y
 
 # Ajuste 2: Con errores escalados
 popt2, pcov2 = curve_fit(
-    planck_model, nu, I_nu_T,
+    planck_model,
+    nu,
+    I_nu_T,
     p0=[T_wien],
     sigma=sigma_escalada,
     absolute_sigma=True,
-    maxfev=10000
+    maxfev=10000,
 )
 
 T_fit2 = popt2[0]
@@ -267,20 +296,15 @@ table.add_row(
     "Errores originales",
     f"{T_fit1:.4f} ± {sigma_T1:.4f}",
     f"{chi2_red1:.3f}",
-    f"{diff1:.4f} K"
+    f"{diff1:.4f} K",
 )
 table.add_row(
     "Errores escalados",
     f"{T_fit2:.4f} ± {sigma_T2:.4f}",
     f"{chi2_red2:.3f}",
-    f"{diff2:.4f} K"
+    f"{diff2:.4f} K",
 )
-table.add_row(
-    "Satélite Planck",
-    f"{T_cmb_accepted:.5f}",
-    "—",
-    "—"
-)
+table.add_row("Satélite Planck", f"{T_cmb_accepted:.5f}", "—", "—")
 
 console.print(table)
 
@@ -310,70 +334,142 @@ gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
 
 # Subplot 1: Datos y ajuste
 ax1 = fig.add_subplot(gs[0, 0])
-ax1.errorbar(nu, I_nu_T, yerr=sigma_escalada, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', zorder=5)
-ax1.plot(nu_suave, I_suave, '-', color='blue', linewidth=3,
-        label=f'Ajuste: T = {T_fit2:.3f} K', alpha=0.8)
-ax1.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax1.set_ylabel('Intensidad I(ν,T) (MJy/sr)', fontsize=12, fontweight='bold')
-ax1.set_title('Ajuste del Espectro de Cuerpo Negro', fontsize=14, fontweight='bold')
+ax1.errorbar(
+    nu,
+    I_nu_T,
+    yerr=sigma_escalada,
+    fmt="o",
+    color="red",
+    markersize=7,
+    capsize=5,
+    elinewidth=2,
+    capthick=2,
+    label="Datos COBE",
+    zorder=5,
+)
+ax1.plot(
+    nu_suave,
+    I_suave,
+    "-",
+    color="blue",
+    linewidth=3,
+    label=f"Ajuste: T = {T_fit2:.3f} K",
+    alpha=0.8,
+)
+ax1.set_xlabel("Frecuencia ν (cm⁻¹)", fontsize=12, fontweight="bold")
+ax1.set_ylabel("Intensidad I(ν,T) (MJy/sr)", fontsize=12, fontweight="bold")
+ax1.set_title("Ajuste del Espectro de Cuerpo Negro", fontsize=14, fontweight="bold")
 ax1.legend(fontsize=10)
 ax1.grid(True, alpha=0.3)
 
 # Subplot 2: Log-log
 ax2 = fig.add_subplot(gs[0, 1])
-ax2.errorbar(nu, I_nu_T, yerr=sigma_escalada, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', zorder=5)
-ax2.plot(nu_suave, I_suave, '-', color='blue', linewidth=3,
-        label='Ajuste Planck', alpha=0.8)
-ax2.set_xscale('log')
-ax2.set_yscale('log')
-ax2.set_xlabel('log(Frecuencia ν)', fontsize=12, fontweight='bold')
-ax2.set_ylabel('log(Intensidad I(ν,T))', fontsize=12, fontweight='bold')
-ax2.set_title('Escala Log-Log', fontsize=14, fontweight='bold')
+ax2.errorbar(
+    nu,
+    I_nu_T,
+    yerr=sigma_escalada,
+    fmt="o",
+    color="red",
+    markersize=7,
+    capsize=5,
+    elinewidth=2,
+    capthick=2,
+    label="Datos COBE",
+    zorder=5,
+)
+ax2.plot(
+    nu_suave, I_suave, "-", color="blue", linewidth=3, label="Ajuste Planck", alpha=0.8
+)
+ax2.set_xscale("log")
+ax2.set_yscale("log")
+ax2.set_xlabel("log(Frecuencia ν)", fontsize=12, fontweight="bold")
+ax2.set_ylabel("log(Intensidad I(ν,T))", fontsize=12, fontweight="bold")
+ax2.set_title("Escala Log-Log", fontsize=14, fontweight="bold")
 ax2.legend(fontsize=10)
-ax2.grid(True, alpha=0.3, which='both')
+ax2.grid(True, alpha=0.3, which="both")
 
 # Subplot 3: Residuos
 ax3 = fig.add_subplot(gs[1, 0])
-ax3.errorbar(nu, residuos_norm2, yerr=1.0, fmt='o', color='purple',
-            markersize=7, capsize=5, elinewidth=2, capthick=2)
-ax3.axhline(0, color='blue', linestyle='-', linewidth=2)
-ax3.axhline(2, color='gray', linestyle='--', linewidth=1, label='±2σ')
-ax3.axhline(-2, color='gray', linestyle='--', linewidth=1)
-ax3.axhline(3, color='red', linestyle=':', linewidth=1, label='±3σ')
-ax3.axhline(-3, color='red', linestyle=':', linewidth=1)
-ax3.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax3.set_ylabel('Residuos Normalizados', fontsize=12, fontweight='bold')
-ax3.set_title(f'Residuos (χ²_red = {chi2_red2:.3f})', fontsize=14, fontweight='bold')
+ax3.errorbar(
+    nu,
+    residuos_norm2,
+    yerr=1.0,
+    fmt="o",
+    color="purple",
+    markersize=7,
+    capsize=5,
+    elinewidth=2,
+    capthick=2,
+)
+ax3.axhline(0, color="blue", linestyle="-", linewidth=2)
+ax3.axhline(2, color="gray", linestyle="--", linewidth=1, label="±2σ")
+ax3.axhline(-2, color="gray", linestyle="--", linewidth=1)
+ax3.axhline(3, color="red", linestyle=":", linewidth=1, label="±3σ")
+ax3.axhline(-3, color="red", linestyle=":", linewidth=1)
+ax3.set_xlabel("Frecuencia ν (cm⁻¹)", fontsize=12, fontweight="bold")
+ax3.set_ylabel("Residuos Normalizados", fontsize=12, fontweight="bold")
+ax3.set_title(f"Residuos (χ²_red = {chi2_red2:.3f})", fontsize=14, fontweight="bold")
 ax3.legend(fontsize=10)
 ax3.grid(True, alpha=0.3)
 
 # Subplot 4: Comparación temperaturas
 ax4 = fig.add_subplot(gs[1, 1])
-ax4.errorbar(nu, I_nu_T, yerr=sigma_escalada, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', zorder=5)
-ax4.plot(nu_suave, I_suave, '-', color='blue', linewidth=3,
-        label=f'T = {T_fit2:.3f} K', alpha=0.8)
+ax4.errorbar(
+    nu,
+    I_nu_T,
+    yerr=sigma_escalada,
+    fmt="o",
+    color="red",
+    markersize=7,
+    capsize=5,
+    elinewidth=2,
+    capthick=2,
+    label="Datos COBE",
+    zorder=5,
+)
+ax4.plot(
+    nu_suave,
+    I_suave,
+    "-",
+    color="blue",
+    linewidth=3,
+    label=f"T = {T_fit2:.3f} K",
+    alpha=0.8,
+)
 
 T_bajo = T_fit2 - 0.1
 T_alto = T_fit2 + 0.1
-ax4.plot(nu_suave, planck_model(nu_suave, T_bajo), '--',
-        color='cyan', linewidth=2, label=f'T = {T_bajo:.3f} K', alpha=0.6)
-ax4.plot(nu_suave, planck_model(nu_suave, T_alto), '--',
-        color='orange', linewidth=2, label=f'T = {T_alto:.3f} K', alpha=0.6)
+ax4.plot(
+    nu_suave,
+    planck_model(nu_suave, T_bajo),
+    "--",
+    color="cyan",
+    linewidth=2,
+    label=f"T = {T_bajo:.3f} K",
+    alpha=0.6,
+)
+ax4.plot(
+    nu_suave,
+    planck_model(nu_suave, T_alto),
+    "--",
+    color="orange",
+    linewidth=2,
+    label=f"T = {T_alto:.3f} K",
+    alpha=0.6,
+)
 
-ax4.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax4.set_ylabel('Intensidad I(ν,T) (MJy/sr)', fontsize=12, fontweight='bold')
-ax4.set_title('Sensibilidad a T', fontsize=14, fontweight='bold')
+ax4.set_xlabel("Frecuencia ν (cm⁻¹)", fontsize=12, fontweight="bold")
+ax4.set_ylabel("Intensidad I(ν,T) (MJy/sr)", fontsize=12, fontweight="bold")
+ax4.set_title("Sensibilidad a T", fontsize=14, fontweight="bold")
 ax4.legend(fontsize=9)
 ax4.grid(True, alpha=0.3)
 
-plt.suptitle('Análisis Completo - Radiación Cósmica de Fondo',
-            fontsize=16, fontweight='bold', y=0.995)
+plt.suptitle(
+    "Análisis Completo - Radiación Cósmica de Fondo",
+    fontsize=16,
+    fontweight="bold",
+    y=0.995,
+)
 filename = f"{output_dir}/02_analisis_completo.png"
 plt.savefig(filename, dpi=300, bbox_inches="tight")
 console.print(f"[yellow]💾 Guardado: {filename}[/yellow]")
@@ -419,8 +515,12 @@ resumen = f"""
     • λ_max ≈ {2.898e-3/T_fit2*1000:.2f} mm (microondas)
 """
 
-panel = Panel(resumen, title="[bold]Resultados del Ajuste[/bold]",
-             border_style="green", box=box.DOUBLE)
+panel = Panel(
+    resumen,
+    title="[bold]Resultados del Ajuste[/bold]",
+    border_style="green",
+    box=box.DOUBLE,
+)
 console.print(panel)
 
 console.print("[bold green]✓ ANÁLISIS COMPLETADO EXITOSAMENTE[/bold green]\n")

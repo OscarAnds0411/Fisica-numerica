@@ -426,25 +426,37 @@ console.print(resumen)
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
 # ========== SUBPLOT 1 ==========
-ax1.plot(E_range, f_interpolada, '-', color='blue', linewidth=2.5,
-         label='Polinomio de Lagrange', alpha=0.8)
-ax1.plot(Ei, fE, 'o', color='red', markersize=8,
-         label='Datos experimentales')
-ax1.set_xlabel('Energía $E_i$ (MeV)', fontsize=13, fontweight='bold')
-ax1.set_ylabel(r'Sección eficaz $f(E_i)$ (mb)', fontsize=13, fontweight='bold')
-ax1.set_title('Interpolación de Lagrange', fontsize=15, fontweight='bold')
-ax1.legend(fontsize=11, loc='best')
+ax1.plot(
+    E_range,
+    f_interpolada,
+    "-",
+    color="blue",
+    linewidth=2.5,
+    label="Polinomio de Lagrange",
+    alpha=0.8,
+)
+ax1.plot(Ei, fE, "o", color="red", markersize=8, label="Datos experimentales")
+ax1.set_xlabel("Energía $E_i$ (MeV)", fontsize=13, fontweight="bold")
+ax1.set_ylabel(r"Sección eficaz $f(E_i)$ (mb)", fontsize=13, fontweight="bold")
+ax1.set_title("Interpolación de Lagrange", fontsize=15, fontweight="bold")
+ax1.legend(fontsize=11, loc="best")
 ax1.grid(True, alpha=0.3)
 
 # ========== SUBPLOT 2 ==========
-ax2.plot(E_range, f_spline, '-', color='green', linewidth=2.5,
-         label='Spline cúbico', alpha=0.8)
-ax2.plot(Ei, fE, 'o', color='red', markersize=8,
-         label='Datos experimentales')
-ax2.set_xlabel('Energía $E_i$ (MeV)', fontsize=13, fontweight='bold')
-ax2.set_ylabel(r'Sección eficaz $f(E_i)$ (mb)', fontsize=13, fontweight='bold')
-ax2.set_title('Interpolación Spline cúbica', fontsize=15, fontweight='bold')
-ax2.legend(fontsize=11, loc='best')
+ax2.plot(
+    E_range,
+    f_spline,
+    "-",
+    color="green",
+    linewidth=2.5,
+    label="Spline cúbico",
+    alpha=0.8,
+)
+ax2.plot(Ei, fE, "o", color="red", markersize=8, label="Datos experimentales")
+ax2.set_xlabel("Energía $E_i$ (MeV)", fontsize=13, fontweight="bold")
+ax2.set_ylabel(r"Sección eficaz $f(E_i)$ (mb)", fontsize=13, fontweight="bold")
+ax2.set_title("Interpolación Spline cúbica", fontsize=15, fontweight="bold")
+ax2.legend(fontsize=11, loc="best")
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()

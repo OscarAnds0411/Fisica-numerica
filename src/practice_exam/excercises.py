@@ -3,7 +3,7 @@
     10 EJERCICIOS PARA PREPARACIÓN DE EXAMEN DE FÍSICA NUMÉRICA
 ═══════════════════════════════════════════════════════════════════════════
 
-Basado en los temas que has trabajado (ajustes por mínimos cuadrados, 
+Basado en los temas que has trabajado (ajustes por mínimos cuadrados,
 análisis de datos, ecuaciones diferenciales, etc.)
 
 Autor: Claude
