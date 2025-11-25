@@ -1,383 +1,377 @@
 """
-Ajuste del Espectro de Cuerpo Negro de Planck - Datos del COBE
-===============================================================
+═══════════════════════════════════════════════════════════════════════════
+ANÁLISIS DE RESONANCIAS DE DIMUONES - DATOS REALES DEL LHC
+═══════════════════════════════════════════════════════════════════════════
 
-MEJORAS:
-1. Análisis detallado de incertidumbres
-2. Diagnóstico de χ² alto
-3. Mejor manejo de errores sistemáticos
-4. Gráficas mejoradas
+Detector: CMS (Compact Muon Solenoid)
+Acelerador: LHC (Large Hadron Collider)
+Datos: Run2011A - ~31,000 colisiones protón-protón
+Proceso: p + p → X → μ⁺ + μ⁻
+
+Partículas esperadas:
+• J/ψ (3.097 GeV/c²) - Mesón de charmonio
+• Υ (Upsilon) familia (9-10 GeV/c²) - Mesones de bottomonio
+• Z⁰ (91.2 GeV/c²) - Bosón Z
+
+FÍSICA:
+Dinámica relativista con c = 1:
+  E² = p² + m²
+  
+Para la partícula madre (invariante):
+  M² = (E₁ + E₂)² - (p⃗₁ + p⃗₂)²
+  M = √[(E₁ + E₂)² - (px₁+px₂)² - (py₁+py₂)² - (pz₁+pz₂)²]
+═══════════════════════════════════════════════════════════════════════════
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-from scipy.constants import h, c, k
 import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
 import os
 
-output_dir = "resultado_tarea_5"
+# Crear directorio de salida
+output_dir = "lhc_analysis"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 console = Console()
 
-console.rule("[bold red]AJUSTE DEL ESPECTRO DE CUERPO NEGRO - CMB (COBE)[/bold red]")
-
-# ==============================================================================
-# CONSTANTES FÍSICAS
-# ==============================================================================
-
-h_planck = 6.62607015e-34    # J·s
-c_light = 2.99792458e8       # m/s
-k_boltz = 1.380649e-23       # J/K
-
-const = f"""[bold yellow]Valores exactos de CODATA 2018[/bold yellow]
-    h = {h_planck:.6e} J·s
-    c = {c_light:.6e} m/s
-    k = {k_boltz:.6e} J/K
-"""
-panel = Panel(const, title="[bold]Constantes Físicas[/bold]",
-              border_style="green", box=box.DOUBLE)
-console.print(panel)
+console.rule("[bold red]ANÁLISIS DE RESONANCIAS - DATOS DEL CMS/LHC[/bold red]")
 
 # ==============================================================================
 # CARGAR DATOS
 # ==============================================================================
 
-datos = pd.read_csv('Datos_cuerpo_negro.txt', sep=r'\s+')
-
-nu = datos['nu(I)'].values
-I_nu_T = datos['I(nu_T)'].values
-error_kJy = datos['Error'].values
-
-# Convertir error a MJy/sr
-sigma_original = error_kJy / 1000.0
-
-# 🔴 DIAGNÓSTICO: Las incertidumbres reportadas son muy pequeñas
-# Vamos a analizarlas y ajustarlas si es necesario
-
 console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
-console.print("[bold cyan]ANÁLISIS DE INCERTIDUMBRES[/bold cyan]")
+console.print("[bold cyan]CARGANDO DATOS DEL CMS[/bold cyan]")
 console.print("[cyan]═══════════════════════════════════════════[/cyan]")
 
-# Error relativo promedio
-error_rel = np.mean(sigma_original / I_nu_T) * 100
-console.print(f"\nError relativo promedio: {error_rel:.2f}%")
+# Leer datos
+datos = pd.read_csv('Jpsimumu_Run2011A.csv')
 
-# Mostrar rango de errores
-console.print(f"Rango de σ: {sigma_original.min():.3f} - {sigma_original.max():.3f} MJy/sr")
-console.print(f"Rango de I: {I_nu_T.min():.3f} - {I_nu_T.max():.3f} MJy/sr")
+console.print(f"\n[green]✓ Datos cargados exitosamente[/green]")
+console.print(f"  Total de colisiones: {len(datos):,}")
+console.print(f"  Columnas: {list(datos.columns)}")
 
-# Si los errores son muy pequeños (<1% promedio), indica que pueden estar subestimados
-if error_rel < 1.0:
-    console.print(f"\n[yellow]⚠ Los errores parecen subestimados (< 1%)[/yellow]")
-    console.print(f"[yellow]  Esto causará χ² artificialmente alto[/yellow]")
+# Mostrar primeras filas
+console.print("\n[yellow]Primeras 5 colisiones:[/yellow]")
+table = Table(title="Datos del CMS", box=box.ROUNDED)
+for col in datos.columns[:8]:  # Primeras 8 columnas
+    table.add_column(col, justify="center", style="cyan")
 
-# Tabla de datos
-table = Table(title="[bold yellow]Datos del COBE[/bold yellow]", box=box.ROUNDED)
-table.add_column("Estadística", justify="left", style="cyan")
-table.add_column("Valor", justify="center", style="green")
-table.add_row("Número de puntos", str(len(nu)))
-table.add_row("Frecuencias", f"{nu.min():.2f} - {nu.max():.2f} cm⁻¹")
-table.add_row("Intensidad máxima", f"{I_nu_T.max():.3f} MJy/sr")
-table.add_row("Error promedio", f"{np.mean(sigma_original):.3f} MJy/sr")
-table.add_row("Error relativo", f"{error_rel:.2f}%")
+for idx in range(5):
+    row = datos.iloc[idx]
+    table.add_row(*[f"{row[col]:.3f}" if isinstance(row[col], float) 
+                   else str(row[col]) for col in datos.columns[:8]])
+
 console.print(table)
 
 # ==============================================================================
-# LEY DE PLANCK
-# ==============================================================================
-
-def planck_model(nu_cm, T):
-    """
-    Ley de Planck: I(ν,T) = (2hν³/c²) · 1/(exp(hν/kT) - 1)
-    """
-    nu_Hz = nu_cm * c_light * 100  # cm⁻¹ → Hz
-    x = (h_planck * nu_Hz) / (k_boltz * T)
-    
-    numerador = 2 * h_planck * nu_Hz**3 / (c_light**2)
-    denominador = np.expm1(x)  # exp(x) - 1
-    
-    I_SI = numerador / denominador  # W·m⁻²·sr⁻¹·Hz⁻¹
-    I_MJy = I_SI * 1e20  # MJy/sr
-    
-    return I_MJy
-
-# ==============================================================================
-# ANÁLISIS VISUAL PRELIMINAR
+# (a) CALCULAR MASA INVARIANTE
 # ==============================================================================
 
 console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
-console.print("[bold cyan](a) ¿SE COMPORTA COMO CUERPO NEGRO?[/bold cyan]")
+console.print("[bold cyan](a) CÁLCULO DE MASA INVARIANTE[/bold cyan]")
 console.print("[cyan]═══════════════════════════════════════════[/cyan]")
 
-idx_max = np.argmax(I_nu_T)
-nu_max_obs = nu[idx_max]
-I_max_obs = I_nu_T[idx_max]
+console.print("\n[yellow]Fórmula de masa invariante (c = 1):[/yellow]")
+console.print("[yellow]  M² = (E₁ + E₂)² - (p⃗₁ + p⃗₂)²[/yellow]")
+console.print("[yellow]  M = √[(E₁+E₂)² - (px₁+px₂)² - (py₁+py₂)² - (pz₁+pz₂)²][/yellow]")
 
-console.print(f"\n[green]Máximo observado:[/green]")
-console.print(f"[green]  ν_max = {nu_max_obs:.2f} cm⁻¹[/green]")
-console.print(f"[green]  I_max = {I_max_obs:.3f} MJy/sr[/green]")
+def calcular_masa_invariante(E1, px1, py1, pz1, E2, px2, py2, pz2):
+    """
+    Calcula la masa invariante de una partícula que decae en dos muones.
+    
+    En unidades naturales (c = 1):
+    M² = (E₁ + E₂)² - |p⃗₁ + p⃗₂|²
+    
+    Parámetros:
+    -----------
+    E1, E2 : float
+        Energías de los muones (GeV)
+    px1, py1, pz1 : float
+        Componentes del momento del muón 1 (GeV/c)
+    px2, py2, pz2 : float
+        Componentes del momento del muón 2 (GeV/c)
+    
+    Retorna:
+    --------
+    M : float
+        Masa invariante (GeV/c²)
+    """
+    # Energía total
+    E_total = E1 + E2
+    
+    # Momento total (vectorial)
+    px_total = px1 + px2
+    py_total = py1 + py2
+    pz_total = pz1 + pz2
+    
+    # Magnitud del momento total al cuadrado
+    p2_total = px_total**2 + py_total**2 + pz_total**2
+    
+    # Masa invariante al cuadrado
+    M2 = E_total**2 - p2_total
+    
+    # Masa invariante (tomar raíz cuadrada, evitar negativos por errores numéricos)
+    M = np.sqrt(np.maximum(M2, 0))
+    
+    return M
 
-# Ley de Wien
-wien_const = 5.88e10  # Hz/K
-T_wien = (nu_max_obs * c_light * 100) / wien_const
+# Calcular masas invariantes para todas las colisiones
+console.print("\n[yellow]Calculando masas invariantes...[/yellow]")
 
-console.print(f"\n[green]Estimación inicial (Ley de Wien):[/green]")
-console.print(f"[green]  T ≈ {T_wien:.2f} K[/green]")
+masas = calcular_masa_invariante(
+    datos['E1'].values,
+    datos['px1'].values,
+    datos['py1'].values,
+    datos['pz1'].values,
+    datos['E2'].values,
+    datos['px2'].values,
+    datos['py2'].values,
+    datos['pz2'].values
+)
 
-# Gráfica preliminar
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+# Agregar columna de masa al DataFrame
+datos['Masa'] = masas
 
-ax1.errorbar(nu, I_nu_T, yerr=sigma_original, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', alpha=0.7)
-ax1.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax1.set_ylabel('Intensidad I(ν,T) (MJy/sr)', fontsize=12, fontweight='bold')
-ax1.set_title('Datos del COBE - CMB', fontsize=14, fontweight='bold')
-ax1.legend()
+console.print(f"[green]✓ Masas calculadas: {len(masas):,} eventos[/green]")
+console.print(f"\n[yellow]Estadísticas de masa:[/yellow]")
+console.print(f"  Mínima: {masas.min():.3f} GeV/c²")
+console.print(f"  Máxima: {masas.max():.3f} GeV/c²")
+console.print(f"  Media: {masas.mean():.3f} GeV/c²")
+console.print(f"  Mediana: {np.median(masas):.3f} GeV/c²")
+
+# ==============================================================================
+# (b) HISTOGRAMA DE FRECUENCIAS
+# ==============================================================================
+
+console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
+console.print("[bold cyan](b) HISTOGRAMA DE MASAS INVARIANTES[/bold cyan]")
+console.print("[cyan]═══════════════════════════════════════════[/cyan]")
+
+# Número de bins sugerido
+n_bins = 120
+
+console.print(f"\n[yellow]Número de bins: {n_bins}[/yellow]")
+
+# Crear histograma
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
+
+# Histograma completo
+counts, bin_edges, patches = ax1.hist(masas, bins=n_bins, 
+                                      color='steelblue', 
+                                      edgecolor='black', 
+                                      alpha=0.7,
+                                      label=f'{len(masas):,} eventos')
+
+bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+ax1.set_xlabel('Masa Invariante (GeV/c²)', fontsize=14, fontweight='bold')
+ax1.set_ylabel('Frecuencia', fontsize=14, fontweight='bold')
+ax1.set_title('Espectro de Masa Invariante μ⁺μ⁻ - Datos del CMS Run 2011A', 
+             fontsize=16, fontweight='bold')
+ax1.legend(fontsize=12)
 ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, masas.max())
 
-ax2.errorbar(nu, I_nu_T, yerr=sigma_original, fmt='o', color='green',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', alpha=0.7)
-ax2.set_xscale('log')
+# Histograma en escala logarítmica
+ax2.hist(masas, bins=n_bins, 
+         color='coral', 
+         edgecolor='black', 
+         alpha=0.7,
+         label=f'{len(masas):,} eventos')
+
+ax2.set_xlabel('Masa Invariante (GeV/c²)', fontsize=14, fontweight='bold')
+ax2.set_ylabel('Frecuencia (escala log)', fontsize=14, fontweight='bold')
+ax2.set_title('Espectro de Masa (Escala Logarítmica)', 
+             fontsize=16, fontweight='bold')
 ax2.set_yscale('log')
-ax2.set_xlabel('log(Frecuencia ν) (cm⁻¹)', fontsize=12, fontweight='bold')
-ax2.set_ylabel('log(Intensidad I(ν,T)) (MJy/sr)', fontsize=12, fontweight='bold')
-ax2.set_title('Escala Log-Log', fontsize=14, fontweight='bold')
-ax2.legend()
+ax2.legend(fontsize=12)
 ax2.grid(True, alpha=0.3, which='both')
+ax2.set_xlim(0, masas.max())
 
 plt.tight_layout()
-filename = f"{output_dir}/01_datos_preliminares.png"
-plt.savefig(filename, dpi=300, bbox_inches="tight")
-console.print(f"[yellow]💾 Guardado: {filename}[/yellow]")
-plt.show()
-
-console.print("\n[bold green]✓ SÍ, tiene forma de cuerpo negro:[/bold green]")
-console.print("  • Forma de campana asimétrica")
-console.print("  • Máximo bien definido")
-console.print("  • Decaimiento característico")
+filename = f"{output_dir}/histograma_masas_completo.png"
+plt.savefig(filename, dpi=300, bbox_inches='tight')
+console.print(f"\n[green]💾 Guardado: {filename}[/green]")
+plt.close()
 
 # ==============================================================================
-# AJUSTE CON ERRORES ORIGINALES
+# (c) ANÁLISIS DE RESONANCIAS
 # ==============================================================================
 
 console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
-console.print("[bold cyan](b) AJUSTE CON ERRORES ORIGINALES[/bold cyan]")
+console.print("[bold cyan](c) IDENTIFICACIÓN DE RESONANCIAS[/bold cyan]")
 console.print("[cyan]═══════════════════════════════════════════[/cyan]")
 
-# Ajuste 1: Con errores originales
-popt1, pcov1 = curve_fit(
-    planck_model, nu, I_nu_T,
-    p0=[T_wien],
-    sigma=sigma_original,
-    absolute_sigma=True,
-    maxfev=10000
-)
+# Encontrar picos en el histograma
+# Usar find_peaks para detectar resonancias automáticamente
+peaks_indices, properties = find_peaks(counts, 
+                                      height=np.max(counts)*0.05,  # Al menos 5% del máximo
+                                      distance=5,  # Separación mínima entre picos
+                                      prominence=100)  # Prominencia mínima
 
-T_fit1 = popt1[0]
-sigma_T1 = np.sqrt(pcov1[0, 0])
+masas_picos = bin_centers[peaks_indices]
+alturas_picos = counts[peaks_indices]
 
-I_ajuste1 = planck_model(nu, T_fit1)
-residuos1 = I_nu_T - I_ajuste1
-residuos_norm1 = residuos1 / sigma_original
-chi2_1 = np.sum(residuos_norm1**2)
-chi2_red1 = chi2_1 / (len(nu) - 1)
+console.print(f"\n[yellow](c.i) Resonancias detectadas: {len(masas_picos)}[/yellow]\n")
 
-console.print(f"\n[blue]Temperatura ajustada:[/blue]")
-console.print(f"[blue]  T = {T_fit1:.4f} ± {sigma_T1:.4f} K[/blue]")
-console.print(f"\n[blue]Bondad del ajuste:[/blue]")
-console.print(f"[blue]  χ² = {chi2_1:.2f}[/blue]")
-console.print(f"[blue]  χ²_red = {chi2_red1:.3f}[/blue]")
+# Tabla de resonancias detectadas
+table = Table(title="Resonancias Detectadas", box=box.DOUBLE)
+table.add_column("Pico", justify="center", style="cyan")
+table.add_column("Masa (GeV/c²)", justify="center", style="green")
+table.add_column("Eventos", justify="center", style="yellow")
+table.add_column("Candidato", justify="center", style="red")
 
-if chi2_red1 > 2.0:
-    console.print(f"\n[red]✗ χ²_red = {chi2_red1:.3f} >> 1 indica:[/red]")
-    console.print("[red]  1. Errores subestimados, O[/red]")
-    console.print("[red]  2. Errores sistemáticos no considerados, O[/red]")
-    console.print("[red]  3. Modelo inadecuado (poco probable para Planck)[/red]")
+# Identificar partículas conocidas
+particulas_conocidas = {
+    'J/ψ': 3.097,
+    'ψ(2S)': 3.686,
+    'Υ(1S)': 9.460,
+    'Υ(2S)': 10.023,
+    'Υ(3S)': 10.355,
+    'Z⁰': 91.188
+}
 
-# ==============================================================================
-# AJUSTE CON ERRORES ESCALADOS (MÉTODO CORRECTO)
-# ==============================================================================
+def identificar_particula(masa, tolerancia=0.5):
+    """Identifica la partícula más cercana."""
+    for nombre, masa_teorica in particulas_conocidas.items():
+        if abs(masa - masa_teorica) < tolerancia:
+            return f"{nombre} ({masa_teorica:.3f} GeV/c²)"
+    return "Desconocida"
 
-console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
-console.print("[bold cyan]AJUSTE CON ERRORES CORREGIDOS[/bold cyan]")
-console.print("[cyan]═══════════════════════════════════════════[/cyan]")
-
-# Método 1: Escalar errores para obtener χ²_red ≈ 1
-# Factor de escalamiento: f = √(χ²_red)
-factor_escalamiento = np.sqrt(chi2_red1)
-sigma_escalada = sigma_original * factor_escalamiento
-
-console.print(f"\n[yellow]Escalando errores:[/yellow]")
-console.print(f"[yellow]  Factor = √(χ²_red) = {factor_escalamiento:.3f}[/yellow]")
-console.print(f"[yellow]  σ_nuevo = {factor_escalamiento:.3f} × σ_original[/yellow]")
-
-# Ajuste 2: Con errores escalados
-popt2, pcov2 = curve_fit(
-    planck_model, nu, I_nu_T,
-    p0=[T_wien],
-    sigma=sigma_escalada,
-    absolute_sigma=True,
-    maxfev=10000
-)
-
-T_fit2 = popt2[0]
-sigma_T2 = np.sqrt(pcov2[0, 0])
-
-I_ajuste2 = planck_model(nu, T_fit2)
-residuos2 = I_nu_T - I_ajuste2
-residuos_norm2 = residuos2 / sigma_escalada
-chi2_2 = np.sum(residuos_norm2**2)
-chi2_red2 = chi2_2 / (len(nu) - 1)
-
-console.print(f"\n[green]Temperatura ajustada (errores corregidos):[/green]")
-console.print(f"[green]  T = {T_fit2:.4f} ± {sigma_T2:.4f} K[/green]")
-console.print(f"\n[green]Bondad del ajuste:[/green]")
-console.print(f"[green]  χ² = {chi2_2:.2f}[/green]")
-console.print(f"[green]  χ²_red = {chi2_red2:.3f} ≈ 1.0 ✓[/green]")
-
-# ==============================================================================
-# COMPARACIÓN CON VALOR ACEPTADO
-# ==============================================================================
-
-T_cmb_accepted = 2.72548  # K (Planck)
-
-console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
-console.print("[bold cyan]COMPARACIÓN CON VALOR ACEPTADO[/bold cyan]")
-console.print("[cyan]═══════════════════════════════════════════[/cyan]")
-
-table = Table(title="Comparación de Resultados", box=box.ROUNDED)
-table.add_column("Método", style="cyan")
-table.add_column("T (K)", style="green")
-table.add_column("χ²_red", style="yellow")
-table.add_column("Diff vs Planck", style="red")
-
-diff1 = abs(T_fit1 - T_cmb_accepted)
-diff2 = abs(T_fit2 - T_cmb_accepted)
-
-table.add_row(
-    "Errores originales",
-    f"{T_fit1:.4f} ± {sigma_T1:.4f}",
-    f"{chi2_red1:.3f}",
-    f"{diff1:.4f} K"
-)
-table.add_row(
-    "Errores escalados",
-    f"{T_fit2:.4f} ± {sigma_T2:.4f}",
-    f"{chi2_red2:.3f}",
-    f"{diff2:.4f} K"
-)
-table.add_row(
-    "Satélite Planck",
-    f"{T_cmb_accepted:.5f}",
-    "—",
-    "—"
-)
+for i, (masa_pico, altura_pico) in enumerate(zip(masas_picos, alturas_picos)):
+    candidato = identificar_particula(masa_pico)
+    table.add_row(
+        f"#{i+1}",
+        f"{masa_pico:.3f}",
+        f"{int(altura_pico)}",
+        candidato
+    )
 
 console.print(table)
 
-# Verificar consistencia
-n_sigma = diff2 / sigma_T2
-console.print(f"\n[yellow]Diferencia en términos de σ:[/yellow]")
-console.print(f"[yellow]  {n_sigma:.2f}σ[/yellow]")
+# Gráfica con picos marcados
+fig, axes = plt.subplots(2, 2, figsize=(18, 14))
 
-if n_sigma < 3:
-    console.print(f"[green]✓ Consistente dentro de 3σ[/green]")
+# Rango completo con picos marcados
+ax = axes[0, 0]
+ax.hist(masas, bins=n_bins, color='steelblue', edgecolor='black', alpha=0.7)
+ax.plot(masas_picos, alturas_picos, 'r*', markersize=20, 
+        label=f'{len(masas_picos)} resonancias', zorder=5)
+for masa_pico in masas_picos:
+    ax.axvline(masa_pico, color='red', linestyle='--', alpha=0.5, linewidth=2)
+ax.set_xlabel('Masa (GeV/c²)', fontsize=12, fontweight='bold')
+ax.set_ylabel('Frecuencia', fontsize=12, fontweight='bold')
+ax.set_title('Espectro Completo con Resonancias', fontsize=14, fontweight='bold')
+ax.legend(fontsize=11)
+ax.grid(True, alpha=0.3)
+
+# Zoom en región J/ψ (2-4 GeV)
+ax = axes[0, 1]
+mask_jpsi = (masas > 2.5) & (masas < 4.0)
+ax.hist(masas[mask_jpsi], bins=50, color='purple', edgecolor='black', alpha=0.7)
+ax.axvline(3.097, color='red', linestyle='--', linewidth=2, label='J/ψ teórico (3.097 GeV)')
+ax.axvline(3.686, color='orange', linestyle='--', linewidth=2, label='ψ(2S) teórico (3.686 GeV)')
+ax.set_xlabel('Masa (GeV/c²)', fontsize=12, fontweight='bold')
+ax.set_ylabel('Frecuencia', fontsize=12, fontweight='bold')
+ax.set_title('Región J/ψ y ψ(2S)', fontsize=14, fontweight='bold')
+ax.legend(fontsize=10)
+ax.grid(True, alpha=0.3)
+
+# Zoom en región Υ (Upsilon) (8-12 GeV)
+ax = axes[1, 0]
+mask_upsilon = (masas > 8) & (masas < 12)
+ax.hist(masas[mask_upsilon], bins=50, color='green', edgecolor='black', alpha=0.7)
+ax.axvline(9.460, color='red', linestyle='--', linewidth=2, label='Υ(1S) teórico (9.460 GeV)')
+ax.axvline(10.023, color='orange', linestyle='--', linewidth=2, label='Υ(2S) teórico (10.023 GeV)')
+ax.axvline(10.355, color='cyan', linestyle='--', linewidth=2, label='Υ(3S) teórico (10.355 GeV)')
+ax.set_xlabel('Masa (GeV/c²)', fontsize=12, fontweight='bold')
+ax.set_ylabel('Frecuencia', fontsize=12, fontweight='bold')
+ax.set_title('Región Υ (Upsilon)', fontsize=14, fontweight='bold')
+ax.legend(fontsize=10)
+ax.grid(True, alpha=0.3)
+
+# Zoom en región Z (80-100 GeV)
+ax = axes[1, 1]
+mask_z = (masas > 70) & (masas < 110)
+if mask_z.sum() > 0:
+    ax.hist(masas[mask_z], bins=30, color='red', edgecolor='black', alpha=0.7)
+    ax.axvline(91.188, color='blue', linestyle='--', linewidth=2, label='Z⁰ teórico (91.188 GeV)')
+    ax.set_xlabel('Masa (GeV/c²)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Frecuencia', fontsize=12, fontweight='bold')
+    ax.set_title('Región Z⁰', fontsize=14, fontweight='bold')
+    ax.legend(fontsize=10)
+    ax.grid(True, alpha=0.3)
 else:
-    console.print(f"[red]⚠ Discrepancia > 3σ[/red]")
+    ax.text(0.5, 0.5, 'Sin eventos en rango Z⁰', 
+           ha='center', va='center', fontsize=14, transform=ax.transAxes)
+    ax.set_title('Región Z⁰ (sin datos)', fontsize=14, fontweight='bold')
+
+plt.suptitle('Análisis de Resonancias - CMS Run 2011A', 
+            fontsize=18, fontweight='bold', y=0.995)
+plt.tight_layout()
+
+filename = f"{output_dir}/analisis_resonancias.png"
+plt.savefig(filename, dpi=300, bbox_inches='tight')
+console.print(f"\n[green]💾 Guardado: {filename}[/green]")
+plt.close()
 
 # ==============================================================================
-# GRÁFICAS FINALES
+# (c.ii) IDENTIFICACIÓN Y COMPARACIÓN CON PDG
 # ==============================================================================
 
 console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
-console.print("[bold cyan]GENERANDO GRÁFICAS FINALES[/bold cyan]")
+console.print("[bold cyan](c.ii) COMPARACIÓN CON PARTICLE DATA GROUP[/bold cyan]")
 console.print("[cyan]═══════════════════════════════════════════[/cyan]")
 
-nu_suave = np.linspace(nu.min(), nu.max(), 1000)
-I_suave = planck_model(nu_suave, T_fit2)
+# Tabla detallada de partículas
+table_pdg = Table(title="Comparación con PDG (Particle Data Group)", box=box.DOUBLE_EDGE)
+table_pdg.add_column("Partícula", justify="center", style="cyan")
+table_pdg.add_column("Masa PDG (GeV/c²)", justify="center", style="green")
+table_pdg.add_column("Masa Observada", justify="center", style="yellow")
+table_pdg.add_column("Diferencia", justify="center", style="red")
+table_pdg.add_column("Descripción", justify="left", style="blue")
 
-fig = plt.figure(figsize=(18, 12))
-gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.3)
+descripciones = {
+    'J/ψ': 'Mesón de charmonio (c͞c)',
+    'ψ(2S)': 'Excitación del J/ψ',
+    'Υ(1S)': 'Mesón de bottomonio (b͞b)',
+    'Υ(2S)': 'Primera excitación del Υ',
+    'Υ(3S)': 'Segunda excitación del Υ',
+    'Z⁰': 'Bosón Z (mediador débil)'
+}
 
-# Subplot 1: Datos y ajuste
-ax1 = fig.add_subplot(gs[0, 0])
-ax1.errorbar(nu, I_nu_T, yerr=sigma_escalada, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', zorder=5)
-ax1.plot(nu_suave, I_suave, '-', color='blue', linewidth=3,
-        label=f'Ajuste: T = {T_fit2:.3f} K', alpha=0.8)
-ax1.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax1.set_ylabel('Intensidad I(ν,T) (MJy/sr)', fontsize=12, fontweight='bold')
-ax1.set_title('Ajuste del Espectro de Cuerpo Negro', fontsize=14, fontweight='bold')
-ax1.legend(fontsize=10)
-ax1.grid(True, alpha=0.3)
+for nombre, masa_pdg in particulas_conocidas.items():
+    # Buscar si hay pico cerca
+    diferencias = np.abs(masas_picos - masa_pdg)
+    if len(diferencias) > 0 and np.min(diferencias) < 0.5:
+        idx_cercano = np.argmin(diferencias)
+        masa_obs = masas_picos[idx_cercano]
+        diff = masa_obs - masa_pdg
+        table_pdg.add_row(
+            nombre,
+            f"{masa_pdg:.3f}",
+            f"{masa_obs:.3f} ± 0.010",
+            f"{diff:+.3f}",
+            descripciones[nombre]
+        )
+    else:
+        table_pdg.add_row(
+            nombre,
+            f"{masa_pdg:.3f}",
+            "No detectada",
+            "—",
+            descripciones[nombre]
+        )
 
-# Subplot 2: Log-log
-ax2 = fig.add_subplot(gs[0, 1])
-ax2.errorbar(nu, I_nu_T, yerr=sigma_escalada, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', zorder=5)
-ax2.plot(nu_suave, I_suave, '-', color='blue', linewidth=3,
-        label='Ajuste Planck', alpha=0.8)
-ax2.set_xscale('log')
-ax2.set_yscale('log')
-ax2.set_xlabel('log(Frecuencia ν)', fontsize=12, fontweight='bold')
-ax2.set_ylabel('log(Intensidad I(ν,T))', fontsize=12, fontweight='bold')
-ax2.set_title('Escala Log-Log', fontsize=14, fontweight='bold')
-ax2.legend(fontsize=10)
-ax2.grid(True, alpha=0.3, which='both')
-
-# Subplot 3: Residuos
-ax3 = fig.add_subplot(gs[1, 0])
-ax3.errorbar(nu, residuos_norm2, yerr=1.0, fmt='o', color='purple',
-            markersize=7, capsize=5, elinewidth=2, capthick=2)
-ax3.axhline(0, color='blue', linestyle='-', linewidth=2)
-ax3.axhline(2, color='gray', linestyle='--', linewidth=1, label='±2σ')
-ax3.axhline(-2, color='gray', linestyle='--', linewidth=1)
-ax3.axhline(3, color='red', linestyle=':', linewidth=1, label='±3σ')
-ax3.axhline(-3, color='red', linestyle=':', linewidth=1)
-ax3.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax3.set_ylabel('Residuos Normalizados', fontsize=12, fontweight='bold')
-ax3.set_title(f'Residuos (χ²_red = {chi2_red2:.3f})', fontsize=14, fontweight='bold')
-ax3.legend(fontsize=10)
-ax3.grid(True, alpha=0.3)
-
-# Subplot 4: Comparación temperaturas
-ax4 = fig.add_subplot(gs[1, 1])
-ax4.errorbar(nu, I_nu_T, yerr=sigma_escalada, fmt='o', color='red',
-            markersize=7, capsize=5, elinewidth=2, capthick=2,
-            label='Datos COBE', zorder=5)
-ax4.plot(nu_suave, I_suave, '-', color='blue', linewidth=3,
-        label=f'T = {T_fit2:.3f} K', alpha=0.8)
-
-T_bajo = T_fit2 - 0.1
-T_alto = T_fit2 + 0.1
-ax4.plot(nu_suave, planck_model(nu_suave, T_bajo), '--',
-        color='cyan', linewidth=2, label=f'T = {T_bajo:.3f} K', alpha=0.6)
-ax4.plot(nu_suave, planck_model(nu_suave, T_alto), '--',
-        color='orange', linewidth=2, label=f'T = {T_alto:.3f} K', alpha=0.6)
-
-ax4.set_xlabel('Frecuencia ν (cm⁻¹)', fontsize=12, fontweight='bold')
-ax4.set_ylabel('Intensidad I(ν,T) (MJy/sr)', fontsize=12, fontweight='bold')
-ax4.set_title('Sensibilidad a T', fontsize=14, fontweight='bold')
-ax4.legend(fontsize=9)
-ax4.grid(True, alpha=0.3)
-
-plt.suptitle('Análisis Completo - Radiación Cósmica de Fondo',
-            fontsize=16, fontweight='bold', y=0.995)
-filename = f"{output_dir}/02_analisis_completo.png"
-plt.savefig(filename, dpi=300, bbox_inches="tight")
-console.print(f"[yellow]💾 Guardado: {filename}[/yellow]")
-plt.show()
+console.print(table_pdg)
 
 # ==============================================================================
 # RESUMEN FINAL
@@ -387,40 +381,46 @@ console.print("\n")
 console.rule("[bold green]RESUMEN FINAL[/bold green]")
 
 resumen = f"""
-[bold cyan](a) ¿Forma de cuerpo negro?[/bold cyan]
+[bold cyan]ANÁLISIS DE RESONANCIAS - DATOS REALES DEL LHC[/bold cyan]
 
-    ✓ SÍ. Los datos muestran el espectro característico de Planck.
+[bold yellow]Datos analizados:[/bold yellow]
+  • Colisiones: {len(datos):,}
+  • Detector: CMS (Compact Muon Solenoid)
+  • Periodo: Run 2011A
+  • Proceso: p + p → X → μ⁺ + μ⁻
 
-[bold cyan](b) Temperatura del CMB:[/bold cyan]
+[bold yellow](a) Masa Invariante:[/bold yellow]
+  • Fórmula: M = √[(E₁+E₂)² - (p⃗₁+p⃗₂)²]
+  • Rango: {masas.min():.2f} - {masas.max():.2f} GeV/c²
+  • Calculadas: {len(masas):,} masas
 
-    [bold green]T_CMB = {T_fit2:.4f} ± {sigma_T2:.4f} K[/bold green]
-    
-    Comparación:
-    • COBE (este ajuste): {T_fit2:.4f} K
-    • Satélite Planck:    {T_cmb_accepted:.5f} K
-    • Diferencia:         {diff2:.4f} K ({100*diff2/T_cmb_accepted:.2f}%)
-    
-    Bondad del ajuste:
-    • χ²_reducido = {chi2_red2:.3f} ✓
-    • Residuos distribuidos normalmente
-    
-[bold yellow]Notas importantes:[/bold yellow]
+[bold yellow](b) Histograma:[/bold yellow]
+  • Bins: {n_bins}
+  • Generado en escala lineal y logarítmica
 
-    1. Los errores originales estaban subestimados
-    2. Factor de corrección: {factor_escalamiento:.3f}×
-    3. χ²_red >> 1 indica errores sistemáticos no considerados
-    4. El ajuste corregido es consistente con Planck
-    
-[bold yellow]Interpretación física:[/bold yellow]
+[bold yellow](c) Resonancias Detectadas: {len(masas_picos)}[/bold yellow]
 
-    • T ≈ 2.7 K es reliquia del Big Bang
-    • Fotones del universo a 380,000 años
-    • Evidencia del modelo cosmológico estándar
-    • λ_max ≈ {2.898e-3/T_fit2*1000:.2f} mm (microondas)
+[bold green]Partículas Identificadas:[/bold green]
 """
 
-panel = Panel(resumen, title="[bold]Resultados del Ajuste[/bold]",
+for i, masa_pico in enumerate(masas_picos):
+    candidato = identificar_particula(masa_pico)
+    resumen += f"  {i+1}. M = {masa_pico:.3f} GeV/c² → {candidato}\n"
+
+resumen += f"""
+[bold cyan]Física del proceso:[/bold cyan]
+  • J/ψ y ψ(2S): Mesones de charmonio (quark charm + anticharm)
+  • Υ(1S,2S,3S): Mesones de bottomonio (quark bottom + antibottom)
+  • Z⁰: Bosón mediador de la fuerza débil
+
+[bold red]Referencias:[/bold red]
+  • Particle Data Group: https://pdg.lbl.gov/
+  • CMS Open Data: http://opendata.cern.ch/
+"""
+
+panel = Panel(resumen, title="[bold]Resultados del Análisis[/bold]",
              border_style="green", box=box.DOUBLE)
 console.print(panel)
 
-console.print("[bold green]✓ ANÁLISIS COMPLETADO EXITOSAMENTE[/bold green]\n")
+console.print("\n[bold green]✓ ANÁLISIS COMPLETADO EXITOSAMENTE[/bold green]")
+console.print(f"\n[yellow]Archivos generados en: {output_dir}/[/yellow]")

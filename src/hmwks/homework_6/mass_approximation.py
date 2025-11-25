@@ -72,20 +72,32 @@ df["mass"] = mass
 cons.print("[bold green]Masas calculadas correctamente.[/bold green]")
 
 cons.print("\n[bold yellow]Estadísticas de la masa invariante:[/bold yellow]")
-cons.print(df["mass"].describe())
+# cons.print(df["mass"].describe())
+cons.print(f"[green]✓ Masas calculadas: {len(mass):,} eventos[/green]")
+cons.print(f"\n[yellow]Estadísticas de masa:[/yellow]")
+cons.print(f"  Mínima: {mass.min():.3f} GeV/c²")
+cons.print(f"  Máxima: {mass.max():.3f} GeV/c²")
+cons.print(f"  Media: {mass.mean():.3f} GeV/c²")
+cons.print(f"  Mediana: {st.median(mass):.3f} GeV/c²")
 cons.rule("[bold cyan]Generando histograma...[/bold cyan]")
 
 bins = 120  # >100 bins como pide la tarea
 
-gp.figure(figsize=(10,6))
-gp.hist(df["mass"], bins=bins)
-gp.xlabel("Masa invariante (GeV/c²)")
-gp.ylabel("Frecuencia")
+gp.figure(figsize=(14,12))
+gp.hist(df["mass"], bins=bins,
+        color='coral',
+        edgecolor='black',
+        alpha=0.7,
+        label=f'{num_eventos} eventos')
+gp.xlabel("Masa invariante (GeV/c²)", fontsize=14, fontweight='bold')
+gp.ylabel("Frecuencia", fontsize=14, fontweight='bold')
 gp.title("Histograma de masas invariantes (120 bins)")
-gp.grid(True)
+gp.legend(fontsize=12)
+gp.grid(True, alpha=0.3)
+gp.xlim(mass.min(), mass.max())
 gp.tight_layout()
 
-filename = os.path.join(output_dir, "histograma_masas.png")
+filename = os.path.join(output_dir, "histograma_masas_Jpsimumu_Run2011A.png")
 gp.savefig(filename, dpi=300, bbox_inches="tight")
 gp.show()
 
