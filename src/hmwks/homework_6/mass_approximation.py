@@ -18,11 +18,95 @@ import numpy as st
 import os
 from rich.console import Console
 from rich.table import Table
+from scipy.signal import find_peaks
 from rich.panel import Panel
 from rich import box
 import matplotlib.pyplot as gp
 
 cons = Console()
+#funciones auxiliares
+def calculo_masa(E_1,px_1,py_1,pz_1,E_2,px_2,py_2,pz_2):
+    """
+    Me dio flojera documentarlo, pero calcula masas como se pidió
+    fuentes: Vealo por usted mismo
+    """
+    # Energia total
+    E_total = E_1 + E_2
+    
+    # momentos en componentes
+    px_t= px_1+px_2
+    py_t= py_1+py_2
+    pz_t= pz_1+pz_2
+
+    # Magnitud del momento total al cuadrado
+    p2_total = px_t**2 + py_t**2 + pz_t**2
+    
+    # Masa invariante al cuadrado
+    M2 = E_total**2 - p2_total
+    
+    # Masa invariante (tomar raíz cuadrada, evitar negativos por errores numéricos)
+    M = st.sqrt(st.maximum(M2, 0))
+    
+    return M
+# μ⁺μ⁻ - Datos del CMS Run 2011A
+def histograma(masa, titulo,  events, colors = 'coral', edge_color = 'black', bins = 120):
+    gp.figure(figsize=(14,12))
+    counts, bin_edges, patches = gp.hist(masa, bins=bins,
+            color= colors,
+            edgecolor=edge_color,
+            alpha=0.7,
+            label=f'{events} eventos')
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    gp.xlabel("Masa invariante (GeV/c²)", fontsize=14, fontweight='bold')
+    gp.ylabel("Frecuencia", fontsize=14, fontweight='bold')
+    gp.title(f"Histograma de masas invariantes {titulo} ({bins} bins)")
+    gp.legend(fontsize=12)
+    gp.grid(True, alpha=0.3)
+    # gp.xlim(mass.min(), mass.max())
+    gp.tight_layout()
+
+    filename = os.path.join(output_dir, f"histograma_masas_{titulo}.png")
+    gp.savefig(filename, dpi=300, bbox_inches="tight")
+    gp.show()
+    return counts, bin_centers, filename
+def counting_peaks(counts, bin_centers):
+    """ Encontrar picos en el histograma
+    Usar find_peaks para detectar resonancias automáticamente
+    """
+    peaks_indices, properties = find_peaks(counts, 
+                                          height=st.max(counts)*0.05,  # Al menos 5% del máximo
+                                          distance=5,  # Separación mínima entre picos
+                                          prominence=100)  # Prominencia mínima
+
+    masas_picos = bin_centers[peaks_indices]
+    alturas_picos = counts[peaks_indices]
+
+    cons.print(f"\n[yellow]Resonancias detectadas: {len(masas_picos)}[/yellow]\n")
+
+    # Tabla de resonancias detectadas
+    table = Table(title="Resonancias Detectadas", box=box.DOUBLE)
+    table.add_column("Pico", justify="center", style="cyan")
+    table.add_column("Masa (GeV/c²)", justify="center", style="green")
+    table.add_column("Eventos", justify="center", style="yellow")
+    table.add_column("Candidato", justify="center", style="red")
+
+    def identificar_particula(masa, tolerancia=0.5):
+        """Identifica la partícula más cercana."""
+        for nombre, masa_teorica in particulas_conocidas.items():
+            if abs(masa - masa_teorica) < tolerancia:
+                return f"{nombre} ({masa_teorica:.3f} GeV/c²)"
+        return "Desconocida"
+
+    for i, (masa_pico, altura_pico) in enumerate(zip(masas_picos, alturas_picos)):
+        candidato = identificar_particula(masa_pico)
+        table.add_row(
+            f"#{i+1}",
+            f"{masa_pico:.3f}",
+            f"{int(altura_pico)}",
+            candidato
+        )
+
+    cons.print(table)
 
 output_dir = "resultados_Tarea_6"
 cons.print(f"[bold] Verficando si existe el directorio {output_dir}...")
@@ -58,22 +142,14 @@ cons.print(table)
 
 cons.rule("[bold blue] Calculando masas invariantes...")
 
-E = E_1 + E_2
-px = px_1 + px_2
-py = py_1 + py_2
-pz = pz_1 + pz_2
-
-m2 = E**2 - (px**2 + py**2 + pz**2)
-m2 = st.clip(m2, 0, None)   # evita negativos por redondeo
-mass = st.sqrt(m2)
+mass = calculo_masa(E_1,px_1,py_1,pz_1,E_2,px_2,py_2,pz_2)
 
 df["mass"] = mass
 
 cons.print("[bold green]Masas calculadas correctamente.[/bold green]")
 
 cons.print("\n[bold yellow]Estadísticas de la masa invariante:[/bold yellow]")
-# cons.print(df["mass"].describe())
-cons.print(f"[green]✓ Masas calculadas: {len(mass):,} eventos[/green]")
+cons.print(f"[green] Masas calculadas: {len(mass):,} eventos[/green]")
 cons.print(f"\n[yellow]Estadísticas de masa:[/yellow]")
 cons.print(f"  Mínima: {mass.min():.3f} GeV/c²")
 cons.print(f"  Máxima: {mass.max():.3f} GeV/c²")
@@ -81,52 +157,66 @@ cons.print(f"  Media: {mass.mean():.3f} GeV/c²")
 cons.print(f"  Mediana: {st.median(mass):.3f} GeV/c²")
 cons.rule("[bold cyan]Generando histograma...[/bold cyan]")
 
-bins = 120  # >100 bins como pide la tarea
-
-gp.figure(figsize=(14,12))
-gp.hist(df["mass"], bins=bins,
-        color='coral',
-        edgecolor='black',
-        alpha=0.7,
-        label=f'{num_eventos} eventos')
-gp.xlabel("Masa invariante (GeV/c²)", fontsize=14, fontweight='bold')
-gp.ylabel("Frecuencia", fontsize=14, fontweight='bold')
-gp.title("Histograma de masas invariantes (120 bins)")
-gp.legend(fontsize=12)
-gp.grid(True, alpha=0.3)
-gp.xlim(mass.min(), mass.max())
-gp.tight_layout()
-
-filename = os.path.join(output_dir, "histograma_masas_Jpsimumu_Run2011A.png")
-gp.savefig(filename, dpi=300, bbox_inches="tight")
-gp.show()
+counts , bin_centers, filename = histograma(mass, "μ⁺μ⁻ - Datos del CMS Run 2011A", len(mass))
 
 cons.print(f"[bold green]Histograma guardado en:[/bold green] {filename}\n")
 
 cons.rule("[bold cyan]Detectando picos en el histograma...[/bold cyan]")
-
-counts, bin_edges = st.histogram(df["mass"], bins=bins)
-bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-peaks_idx = []
-for i in range(1, len(counts) - 1):
-    if counts[i] > counts[i - 1] and counts[i] > counts[i + 1]:
-        peaks_idx.append(i)
-
-peak_masses = bin_centers[peaks_idx]
-peak_counts = counts[peaks_idx]
-
-# Ordena los picos por altura
-ordenados = sorted(zip(peak_masses, peak_counts), key=lambda x: x[1], reverse=True)
-
-# Mostrar los 10 picos más grandes
-table_picos = Table(title="[bold magenta]Picos detectados[/bold magenta]", box=box.ROUNDED)
-table_picos.add_column("Masa (GeV)", justify="right", style="green")
-table_picos.add_column("Cuentas", justify="right", style="yellow")
-
-for masa, cnt in ordenados[:10]:
-    table_picos.add_row(f"{masa:.3f}", f"{cnt}")
-
-cons.print(table_picos)
+# Identificar partículas conocidas
+particulas_conocidas = {
+    'J/ψ': 3.097,
+    'ψ(2S)': 3.686,
+    'Υ(1S)': 9.460,
+    'Υ(2S)': 10.023,
+    'Υ(3S)': 10.355,
+    'Z⁰': 91.188
+}
+# Encontrar picos en el histograma
+counting_peaks(counts, bin_centers)
 
 cons.print("\n[bold green]Análisis completado con éxito :D[/bold green]")
+console.print("\n[cyan]═══════════════════════════════════════════[/cyan]")
+console.print("[bold cyan](c.ii) COMPARACIÓN CON PARTICLE DATA GROUP[/bold cyan]")
+console.print("[cyan]═══════════════════════════════════════════[/cyan]")
+
+# Tabla detallada de partículas
+table_pdg = Table(title="Comparación con PDG (Particle Data Group)", box=box.DOUBLE_EDGE)
+table_pdg.add_column("Partícula", justify="center", style="cyan")
+table_pdg.add_column("Masa PDG (GeV/c²)", justify="center", style="green")
+table_pdg.add_column("Masa Observada", justify="center", style="yellow")
+table_pdg.add_column("Diferencia", justify="center", style="red")
+table_pdg.add_column("Descripción", justify="left", style="blue")
+
+descripciones = {
+    'J/ψ': 'Mesón de charmonio (c͞c)',
+    'ψ(2S)': 'Excitación del J/ψ',
+    'Υ(1S)': 'Mesón de bottomonio (b͞b)',
+    'Υ(2S)': 'Primera excitación del Υ',
+    'Υ(3S)': 'Segunda excitación del Υ',
+    'Z⁰': 'Bosón Z (mediador débil)'
+}
+
+for nombre, masa_pdg in particulas_conocidas.items():
+    # Buscar si hay pico cerca
+    diferencias = np.abs(masas_picos - masa_pdg)
+    if len(diferencias) > 0 and np.min(diferencias) < 0.5:
+        idx_cercano = np.argmin(diferencias)
+        masa_obs = masas_picos[idx_cercano]
+        diff = masa_obs - masa_pdg
+        table_pdg.add_row(
+            nombre,
+            f"{masa_pdg:.3f}",
+            f"{masa_obs:.3f} ± 0.010",
+            f"{diff:+.3f}",
+            descripciones[nombre]
+        )
+    else:
+        table_pdg.add_row(
+            nombre,
+            f"{masa_pdg:.3f}",
+            "No detectada",
+            "—",
+            descripciones[nombre]
+        )
+
+console.print(table_pdg)
