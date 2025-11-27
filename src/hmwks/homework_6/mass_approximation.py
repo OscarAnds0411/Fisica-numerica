@@ -24,6 +24,33 @@ from rich import box
 import matplotlib.pyplot as gp
 
 cons = Console()
+# Identificar partículas conocidas
+particulas_conocidas = {
+    'J/ψ': 3.097,  
+    'ψ(2S)': 3.686,  
+    'Υ(1S)': 9.460,  
+    'Υ(2S)': 10.023,
+    'Υ(3S)': 10.355,
+    'Z⁰': 91.188  
+}
+# particulas_conocidas_lista = {
+    # 'J/ψ': [3.097, 'Mesón de charmonio (c͞c)'],
+    # 'ψ(2S)': [3.686, 'Excitación del J/ψ'],
+    # 'Υ(1S)': [9.460, 'Mesón de bottomonio (b͞b)'],
+    # 'Υ(2S)': [10.023, 'Primera excitación del Υ'],
+    # 'Υ(3S)': [10.355, 'Segunda excitación del Υ'],
+    # 'Z⁰': [91.188, 'Bosón Z (mediador débil)']
+# }
+
+#podría ser un diccionario, pero decidí ser feliz :D
+descripciones = {
+    'J/ψ': 'Mesón de charmonio (c͞c)',
+    'ψ(2S)': 'Excitación del J/ψ',
+    'Υ(1S)': 'Mesón de bottomonio (b͞b)',
+    'Υ(2S)': 'Primera excitación del Υ',
+    'Υ(3S)': 'Segunda excitación del Υ',
+    'Z⁰': 'Bosón Z (mediador débil)'
+}
 #funciones auxiliares
 def calculo_masa(E_1,px_1,py_1,pz_1,E_2,px_2,py_2,pz_2):
     """
@@ -91,7 +118,8 @@ def counting_peaks(counts, bin_centers):
     peaks_indices, properties = find_peaks(counts, 
                                           height=st.max(counts)*0.05,  # Al menos 5% del máximo
                                           distance=5,  # Separación mínima entre picos
-                                          prominence=100)  # Prominencia mínima
+                                          prominence=100)
+                                        #   ,width=(2,20))  # Prominencia mínima
 
     masas_picos = bin_centers[peaks_indices]
     alturas_picos = counts[peaks_indices]
@@ -113,6 +141,53 @@ def counting_peaks(counts, bin_centers):
 
     for i, (masa_pico, altura_pico) in enumerate(zip(masas_picos, alturas_picos)):
         candidato = identificar_particula(masa_pico)
+        table.add_row(
+            f"#{i+1}",
+            f"{masa_pico:.3f}",
+            f"{int(altura_pico)}",
+            candidato
+        )
+
+    cons.print(table)
+    return masas_picos
+def buscar_log(counts, bin_centers):
+    """ Encontrar picos en el histograma
+    Usar find_peaks para detectar resonancias automáticamente
+    """
+    # --- LIMITAR LA BÚSQUEDA A 60–110 GeV ---
+    mask = (bin_centers >= 80) & (bin_centers <= 105)
+
+    counts_roi = counts[mask]
+    bins_roi   = bin_centers[mask]
+
+    # --- DETECCIÓN DE PICO ---
+    peaks_idx, props = find_peaks(
+        counts_roi,
+        prominence=st.max(counts_roi)*0.1,     # Evita picos falsos
+        width=3,            # Ignora ruido de un solo bin
+        distance=5          # No sub-picos
+    )
+
+    masas_picos = bins_roi[peaks_idx]
+    alturas_picos = counts_roi[peaks_idx]
+
+    cons.print(f"\n[yellow]Resonancias detectadas: {len(masas_picos)}[/yellow]\n")
+
+    # Tabla de resonancias detectadas
+    table = Table(title="Resonancias Detectadas", box=box.DOUBLE)
+    table.add_column("Pico", justify="center", style="cyan")
+    table.add_column("Masa (GeV/c²)", justify="center", style="green")
+    table.add_column("Eventos", justify="center", style="yellow")
+    table.add_column("Candidato", justify="center", style="red")
+    def identificar_particula(masa, tolerancia=0.5):
+        """Identifica la partícula más cercana."""
+        for nombre, masa_teorica in particulas_conocidas.items():
+            if abs(masa - masa_teorica) < tolerancia:
+                return f"{nombre} ({masa_teorica:.3f} GeV/c²)"
+        return "Desconocida"
+
+    for i, (masa_pico, altura_pico) in enumerate(zip(masas_picos, alturas_picos)):
+        candidato = identificar_particula(masa_pico,2.0)
         table.add_row(
             f"#{i+1}",
             f"{masa_pico:.3f}",
@@ -145,7 +220,7 @@ def cargar_datos(path: str):
     pz_2 = df['pz2'].to_numpy() 
     return df, numero_de_eventos, E_1,px_1,py_1,pz_1,E_2,px_2,py_2,pz_2
 
-output_dir = "resultados_Tarea_6"
+output_dir = "resultados_tarea_6"
 cons.print(f"[bold] Verficando si existe el directorio {output_dir}...")
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -183,33 +258,6 @@ counts , bin_centers, filename = histograma(mass, "μ⁺μ⁻ - Datos del CMS Ru
 cons.print(f"[bold green]Histograma guardado en:[/bold green] {filename}\n")
 
 cons.rule("[bold cyan]Detectando picos en el histograma...[/bold cyan]")
-# Identificar partículas conocidas
-particulas_conocidas = {
-    'J/ψ': 3.097,  
-    'ψ(2S)': 3.686,  
-    'Υ(1S)': 9.460,  
-    'Υ(2S)': 10.023,
-    'Υ(3S)': 10.355,
-    'Z⁰': 91.188  
-}
-# particulas_conocidas_lista = {
-    # 'J/ψ': [3.097, 'Mesón de charmonio (c͞c)'],
-    # 'ψ(2S)': [3.686, 'Excitación del J/ψ'],
-    # 'Υ(1S)': [9.460, 'Mesón de bottomonio (b͞b)'],
-    # 'Υ(2S)': [10.023, 'Primera excitación del Υ'],
-    # 'Υ(3S)': [10.355, 'Segunda excitación del Υ'],
-    # 'Z⁰': [91.188, 'Bosón Z (mediador débil)']
-# }
-
-#podría ser un diccionario, pero decidí ser feliz :D
-descripciones = {
-    'J/ψ': 'Mesón de charmonio (c͞c)',
-    'ψ(2S)': 'Excitación del J/ψ',
-    'Υ(1S)': 'Mesón de bottomonio (b͞b)',
-    'Υ(2S)': 'Primera excitación del Υ',
-    'Υ(3S)': 'Segunda excitación del Υ',
-    'Z⁰': 'Bosón Z (mediador débil)'
-}
 # Encontrar picos en el histograma
 masas_picos = counting_peaks(counts, bin_centers)
 
@@ -281,11 +329,11 @@ counts , bin_centers, filename = histograma(mass, "Bosón_Z_Run2018B_Lineal", le
 
 cons.print(f"[bold green]Histograma guardado en:[/bold green] {filename}\n")
 cons.rule("[bold cyan]Generando histograma logaritmico...[/bold cyan]")
-log_counts , log_bin_centers, filename = histograma(mass, "Bosón_Z_Run2018B_Lineal", len(mass),True , 'forestgreen', 'coral')
+log_counts , log_bin_centers, filename = histograma(mass, "Bosón_Z_Run2018B_Log", len(mass),True , 'forestgreen', 'coral')
 cons.print(f"[bold green]Histograma guardado en:[/bold green] {filename}\n")
 cons.rule("[bold cyan]Detectando picos en el histograma...[/bold cyan]")
 # Encontrar picos en el histograma
-masas_picos = counting_peaks(counts, bin_centers)
+masas_picos = buscar_log(log_counts, log_bin_centers)
 
 cons.print("\n[bold green]Análisis completado con éxito :D[/bold green]")
 cons.rule("[bold cyan] COMPARACIÓN CON PARTICLE DATA GROUP[/bold cyan]")
@@ -301,7 +349,7 @@ table_pdg.add_column("Descripción", justify="left", style="blue")
 for nombre, masa_pdg in particulas_conocidas.items():
     # Buscar si hay pico cerca
     diferencias = st.abs(masas_picos - masa_pdg)
-    if len(diferencias) > 0 and st.min(diferencias) < 0.5:
+    if len(diferencias) > 0 and st.min(diferencias) < 2.0:
         idx_cercano = st.argmin(diferencias)
         masa_obs = masas_picos[idx_cercano]
         diff = masa_obs - masa_pdg
