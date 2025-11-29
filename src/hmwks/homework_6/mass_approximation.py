@@ -155,7 +155,7 @@ def buscar_log(counts, bin_centers):
     Usar find_peaks para detectar resonancias automáticamente
     """
     # --- LIMITAR LA BÚSQUEDA A 60–110 GeV ---
-    mask = (bin_centers >= 80) & (bin_centers <= 105)
+    mask = (bin_centers >= 60) & (bin_centers <= 110)
 
     counts_roi = counts[mask]
     bins_roi   = bin_centers[mask]
