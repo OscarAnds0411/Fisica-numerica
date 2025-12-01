@@ -12,8 +12,8 @@ import numpy as np
 # PARÁMETROS FÍSICOS
 # ==============================================================================
 
-rho = 0.01      # Densidad lineal (kg/m)
-ten = 40.0      # Tensión (N)
+rho = 0.01  # Densidad lineal (kg/m)
+ten = 40.0  # Tensión (N)
 c = np.sqrt(ten / rho)  # Velocidad de onda
 c1 = c
 ratio = (c / c1) ** 2
@@ -58,20 +58,20 @@ ball2 = sphere(pos=vector(100, 0, 0), color=color.red, radius=2)
 # Etiquetas
 label(
     pos=vector(0, 40, 0),
-    text='Simulación de Cuerda Vibrante',
+    text="Simulación de Cuerda Vibrante",
     height=10,
-    color=color.cyan
+    color=color.cyan,
 )
 
 # ==============================================================================
 # PRIMER PASO
 # ==============================================================================
 
-for i in range(1, N-1):
-    xi[i, 1] = xi[i, 0] + 0.5 * ratio * (xi[i+1, 0] + xi[i-1, 0] - 2 * xi[i, 0])
+for i in range(1, N - 1):
+    xi[i, 1] = xi[i, 0] + 0.5 * ratio * (xi[i + 1, 0] + xi[i - 1, 0] - 2 * xi[i, 0])
 
 xi[0, 1] = 0
-xi[N-1, 1] = 0
+xi[N - 1, 1] = 0
 
 # ==============================================================================
 # BUCLE PRINCIPAL
@@ -81,23 +81,24 @@ print("\nSimulación iniciada.")
 
 while True:
     rate(60)
-    
+
     # Calcular siguiente paso
-    for i in range(1, N-1):
+    for i in range(1, N - 1):
         xi[i, 2] = (
-            2 * xi[i, 1] - xi[i, 0] +
-            ratio * (xi[i+1, 1] + xi[i-1, 1] - 2 * xi[i, 1])
+            2 * xi[i, 1]
+            - xi[i, 0]
+            + ratio * (xi[i + 1, 1] + xi[i - 1, 1] - 2 * xi[i, 1])
         )
-    
+
     xi[0, 2] = 0
-    xi[N-1, 2] = 0
-    
+    xi[N - 1, 2] = 0
+
     #  MÉTODO ALTERNATIVO: Usar modify() para actualizar cada punto
     for i in range(N):
         x = 2.0 * i - 100.0
         y = 300.0 * xi[i, 2]
         vibst.modify(i, pos=vector(x, y, 0))
-    
+
     # Rotar tiempos
     xi[:, 0] = xi[:, 1]
     xi[:, 1] = xi[:, 2]
