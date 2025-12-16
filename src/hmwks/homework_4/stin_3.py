@@ -1,24 +1,33 @@
 """
 VIBRACIÓN DE UNA CUERDA - ECUACIÓN DE ONDA
-==========================================
-
 Solución numérica de la ecuación de onda 1D usando diferencias finitas.
 Analiza la estabilidad según la condición de Courant-Friedrichs-Lewy (CFL).
 
 Autor: Oscar Andrés
 Proyecto: Física Numérica
+
+Advertencia: Solo Dios y mi yo del pasado saben porqué hice cada cosa de este codigo,
+puede que en el momento me haya parecido una graniosa idea
+y que ahorita que trate de explicarlo no tenga sentido tanta vuelta, en fin al final del día FUNCIONA
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib.animation import PillowWriter
-from typing import Callable, Tuple
-import os
+import numpy as np  # arreglos (num.python)
+import matplotlib.pyplot as plt  # plots
+import matplotlib.animation as animation  # animaciones de graficas
+from matplotlib.animation import PillowWriter  # permite guardar mi animacion en un GIF
+from typing import (
+    Callable,
+    Tuple,
+)  # Callable: indicar que un parametro es una funcion; Tuple: indica que un funcion devuelve una tuple y de que tipo
+import os  # manejo de archivos
 
 
 # Si bien no hemos visto nada de esto, quiero practicar para ya ponerme a trabajar
 # por lo que se me hizo mucho mas facil construir una clase para ya no repetir codigo
+
+
+# ¿Porque una clase?
+# Respuesta corta: Para más facilidad de replicar experimentos sin necesidad de reescribir codigo x cada simulacion
 class CuerdaVibrante:
     """
     Simulación de la vibración de una cuerda usando el método de diferencias finitas.
@@ -47,8 +56,42 @@ class CuerdaVibrante:
         Número de Courant r = c·Δt/Δx (debe ser ≤ 1 para estabilidad)
     """
 
-    # constructor:
+    # constructor: ¿Con que se come? funcion reservada que se ejecuta con cada nueva instancia creada de nuestra clase
+    # self: objeto para decir ESTO en especifico de ESTA sola clase, es como ''darle un CURP a variables de nuestras clases'' (o acada cuerda)
+    # No perder de vista que se buscan hacer varios experimentos :D
+    # ejemplo: cuerda1.resolver() === CuerdaVibrante.resolver(cuerda1)
+    # Visto como librerias, por asi decirlo ----
+    # Por que es necesario? Sin self, Python no sabría: ¿Qué Nt usar? (¿el de cuerda1 o cuerda2?)
+    # ¿Qué y actualizar? (¿la matriz de cuerda1 o cuerda2?)
     def __init__(self, L: float, c: float, T_max: float, Nx: int, Courant: float):
+        """
+        __init__ : palabra reservada para el constructor de mi clase
+
+        ¿Que se busca que haga? hacer los setters (metodos para encapsular datos) de cada parametro de nuestra clase:
+        L, c, T_max, Nx, etc.
+
+        Discretizar el espacio:
+        Divide la longitud de la cuerda en partes iguales,
+        Linspace genera una malla de posiciones de 0 a L con Nx puntos :D
+
+        Discretizacion temporal segun Dios Courant: ¿Pa que? pues la animacion se trata de mandar y juntar varios instantes de un movimiento
+        (fotogramas), por lo que esto calcula los tiempos para cada fotograma según Courant: r=(c⋅Δt​)/Δx
+        Calcula cuánto tiempo debe pasar entre cada "fotograma" de la simulación, basado en la condición de Courant,
+        Calcular número de pasos temporales
+        Linspace genera una malla de tiempos de 0 a (dt * Nt) con Nt puntos :D
+
+        Parámetro de estabilidad:
+        Calcula el cuadrado del número de Courant, que aparece en la fórmula de diferencias finitas.
+        ¿Por qué se guarda r^2? Porque en el algoritmo de diferencias finitas lo usamos, no hay más
+
+        Matrices de solución:
+        ¿Qué hace? Crea una matriz de ceros donde guardaremos toda la solución.
+            Dimensiones:
+                Filas (Nx): Puntos espaciales (posiciones)
+                Columnas (Nt): Pasos temporales (fotogramas)
+
+        Información: Como su nombre dice, solo imprime toda la información de nuestra cuerda, segun los parametros dados :D
+        """
         self.L = L
         self.c = c
         self.T_max = T_max
@@ -102,41 +145,74 @@ class CuerdaVibrante:
         ----------
         f : callable
             Función que define el desplazamiento inicial
+            f es una función que toma un array de posiciones y devuelve un array de desplazamientos.
+
+            Este es un type hint que dice:
+                f es una función (Callable)
+                Esa función recibe un np.ndarray como entrada
+                Esa función devuelve un np.ndarray como salida
         """
-        self.y[:, 0] = f(self.x)
-        # Condiciones de frontera
+        self.y[:, 0] = f(
+            self.x
+        )  # manda a llamar a 'y' de nuestra cuerda [:,0]:= todos los puntos espaciales, en el primer tiempo (t=0)
+        # y lo asigna a la funcion 'f' que le pasamos en el metodo y la evalua en el x de dicha cuerda generado en el constructor.
+        # Condiciones de frontera: extremos fijos
         self.y[0, 0] = 0
         self.y[-1, 0] = 0
 
     def condicion_inicial_velocidad(self, g: Callable[[np.ndarray], np.ndarray]):
         """
         Establece la condición inicial de velocidad ∂y/∂t(x, 0) = g(x).
+        El Problema se basa en que la fórmula principal de actualización es:
+        y_{i,j+1} = 2y_{i,j} - y_{i,j-1} + r^2[y_{i+1,j} - 2y_{i,j} + y_{i-1,j}]
+        Luego asi, para calcular el paso j+1 necesitamos:
 
+            El paso actual: y_{i,j}
+            El paso anterior: y_{i,j-1}
+
+        ¿Pero qué pasa en el primer paso?
+        * j = 0 (inicial):  Tenemos self.y[:, 0]  (de condicion_inicial_desplazamiento) funcion anterior
+        * j = 1 (primero):  Necesitamos self.y[:, 1]  ?????
+        ¿Cómo la calculamos? Para calcular j=1 necesitaríamos j=-1, que no existe D:
+        Solución: Usamos la condición inicial de velocidad para calcular directamente el paso j=1
         Calcula y(x, Δt) usando:
             y_{i,1} = y_{i,0} + Δt·g(x_i) + (1/2)r²[y_{i+1,0} - 2y_{i,0} + y_{i-1,0}]
 
         Parameters
         ----------
         g : callable
-            Función que define la velocidad inicial
+            Función que define la velocidad inicial:
+            ∂y/∂t(x,0)=g(x)
         """
-        g_vals = g(self.x)
+        g_vals = g(
+            self.x
+        )  # evaluamos la velocidad en todos los puntos de la malla espacial
 
-        for i in range(1, self.Nx - 1):
+        for i in range(
+            1, self.Nx - 1
+        ):  # recorremos todos los puntos interiores de la cuerda
+            # ¿Por que excluimos los extremos? Por las condiciones de frontera: ya los hicimos fijos
             self.y[i, 1] = (
                 self.y[i, 0]
                 + self.dt * g_vals[i]
                 + 0.5
                 * self.r_squared
                 * (self.y[i + 1, 0] - 2 * self.y[i, 0] + self.y[i - 1, 0])
-            )
+            )  # evaluamos lo dicho en el DocString
 
         # Condiciones de frontera
         self.y[0, 1] = 0
+        # ¿Qué hace? Fuerza que el extremo izquierdo permanezca fijo en y=0 en el primer paso temporal.
+        # ¿Por qué es necesario? Aunque no calculamos este punto en el bucle (empezamos en i=1), explícitamente lo fijamos para garantizar la condición de frontera.
         self.y[-1, 1] = 0
+        # Lo mismo pero en el otro extremo XD
 
+    # Dios soy yo de nuevo
     def resolver(self):
         """
+        ¿Por que solo recibe self? pues toda la información ya esta en el objeto, solo es usarla
+
+        ¿Qué prentende hacer?
         Resuelve la ecuación de onda usando el esquema de diferencias finitas explícito.
 
         Algoritmo:
@@ -151,15 +227,18 @@ class CuerdaVibrante:
                     - self.y[i, j - 1]
                     + self.r_squared
                     * (self.y[i + 1, j] - 2 * self.y[i, j] + self.y[i - 1, j])
-                )
+                )  # recorre la malla temporal por cada punto espacial, por eso el for anidado
 
-            # Condiciones de frontera
+            # Condiciones de frontera, PARA ASEGURAR QUE NETA SE CUMPLA
+            # Fuerza que el extremo izquierdo (x=0) permanezca fijo en y=0 en el nuevo paso temporal.
+            # Aunque no calculamos este punto en el bucle interno (i empieza en 1), lo fijamos explícitamente para garantizar que los extremos nunca se muevan.
             self.y[0, j + 1] = 0
             self.y[-1, j + 1] = 0
 
             # Progreso
             if j % 100 == 0:
                 print(f"  Paso temporal {j}/{self.Nt} ({100*j/self.Nt:.1f}%)")
+                # solo imprime el progreso en formato: Paso temporal 100/990 (10.1%)
 
         print("Simulación completada\n")
 
@@ -195,30 +274,56 @@ class CuerdaVibrante:
         self, archivo_salida: str = None, intervalo: int = 50, saltar_frames: int = 1
     ):
         """
-        Crea una animación de la vibración de la cuerda.
+        Ahora que si no soy yo?
+        Que tenemos? a 'y' una matriz sin sabor, lo cual a los matematicos les dice mucho, pero no a nosotros
+        entonces buscamos una forma de transformar esa matriz de frios numeros a una animacion para ver que suecede.
+        Es decir es como tener los datos de un sismo, en comparación de ver un video del mismo.
+        Los datos pueden ser precisos, pero el video te hace entender qué pasó.
+        esta funcion crea una una animación de la vibración de la cuerda.
 
         Parameters
         ----------
         archivo_salida : str, optional
             Nombre del archivo para guardar la animación (formato .gif)
+            Si archivo_salida == None: no se guarda y solo ves la animación
         intervalo : int
             Intervalo entre frames en ms
+            Qué hace: Controla la velocidad de reproducción
+            50 ms = 20 frames por segundo (velocidad normal)
+            Valores más bajos = animación más rápida
+            Valores más altos = animación más lenta
         saltar_frames : int
             Número de pasos temporales a saltar entre frames
+            Qué hace: Reduce el número de frames para hacer archivos más pequeños
+            saltar_frames = 1: Muestra todos los pasos temporales
+            saltar_frames = 2: Muestra 1 de cada 2 pasos (mitad de frames)
+            saltar_frames = 5: Muestra 1 de cada 5 pasos (⅕ de frames)
         """
-        print(f"Creando animación...")
+        print(f"Creando animación...")  # mucho más texto amable para el usuario
 
+        # Crea 2 paneles una arriba del otro: ax1 es el panel de arriba, ax2 es el panel de abajo
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
 
         # Configurar subplot 1: Animación de la cuerda
-        ax1.set_xlim(0, self.L)
+        ax1.set_xlim(0, self.L)  # limites del eje horizontal: 0->L
         y_max = np.max(np.abs(self.y))
-        ax1.set_ylim(-1.5 * y_max, 1.5 * y_max)
+        ax1.set_ylim(
+            -1.5 * y_max, 1.5 * y_max
+        )  # limites de altura, escalando el valor más alto
         ax1.set_xlabel("Posición x (m)", fontsize=12)
         ax1.set_ylabel("Desplazamiento y (m)", fontsize=12)
         ax1.grid(True, alpha=0.3)
 
+        # Crea una sin datos de color azul, grosor 2 y etiqueta Cuerda
         (line,) = ax1.plot([], [], "b-", lw=2, label="Cuerda")
+        """
+        Nota la coma: (line,)
+            ¿Por qué la coma? plot() devuelve una lista con un elemento. La coma desempaca ese elemento.
+            Sin coma: line = [Line2D_object] (una lista)
+            Con coma: line = Line2D_object (el objeto directo)
+            Ahora line es un objeto que podemos actualizar en cada frame de la animación.
+        """
+        # Cuadro de texto que llenaremos posteriormente
         time_text = ax1.text(
             0.02,
             0.95,
@@ -237,12 +342,14 @@ class CuerdaVibrante:
         ax2.set_ylabel("Desplazamiento y (m)", fontsize=12)
         ax2.grid(True, alpha=0.3)
 
-        # Puntos de observación
+        # Puntos de observación: arreglo con 3 valores; Nx/4 parte entera, Nx/2 parte entera, 3Nx/4 parte entera
         puntos_obs = [self.Nx // 4, self.Nx // 2, 3 * self.Nx // 4]
-        colores = ["r", "g", "b"]
-        lineas_temp = []
+        colores = ["r", "g", "b"]  # rgb = colores rojo, verde y azul
+        lineas_temp = []  # vamos a crear lineas temporales
 
         for i, (punto, color) in enumerate(zip(puntos_obs, colores)):
+            # Como se come este for? i= contador,
+            # zip = Empareja elementos de ambas listas: (0, (25, "r")), (1, (50, "g")), (2, (75, "b"))
             (line_temp,) = ax2.plot(
                 [], [], color=color, lw=1.5, label=f"x = {self.x[punto]:.2f} m"
             )
@@ -258,33 +365,80 @@ class CuerdaVibrante:
 
         plt.tight_layout()
 
-        # Función de inicialización
+        # Función de inicialización: dibuja el primer frame
         def init():
-            line.set_data([], [])
+            line.set_data([], [])  # Vaciamos la linea de la cuerda
             for line_temp in lineas_temp:
+                # como se come este ciclo: Para cada línea temporal (roja, verde, azul) Vacía esa línea
                 line_temp.set_data([], [])
-            time_text.set_text("")
-            return [line] + lineas_temp + [time_text]
+            time_text.set_text("")  # Vaciamos el texto
+            return [line] + lineas_temp + [time_text]  # devuelve los cambios
 
-        # Función de animación
+        # ¿Por qué devolver una lista? Para el modo blit=True (se ve más adelante :D). Matplotlib necesita saber qué objetos redibujar.
+
+        # Función de animación: Recibe un número de frame y actualiza TODOS los elementos visuales.
         def animate(frame):
+            # Esto nos permite saltar pasos temporales para hacer animaciones más cortas.
+            # ¿Por qué el if?
+            # Protección contra sobrepaso. Si por alguna razón j excede el número de pasos temporales, lo limita al último paso válido.
             j = frame * saltar_frames
             if j >= self.Nt:
                 j = self.Nt - 1
 
             # Actualizar cuerda
-            line.set_data(self.x, self.y[:, j])
-            time_text.set_text(f"t = {self.t[j]:.4f} s\nFrame {frame}/{len(frames)}")
+            line.set_data(
+                self.x, self.y[:, j]
+            )  # Actualiza la línea con los datos del paso temporal j.
+            # self.x = Array de posiciones
+            # self.y[:, j] = Columna j de la matriz (todos los desplazamientos en el tiempo j)
+            time_text.set_text(
+                f"t = {self.t[j]:.4f} s\nFrame {frame}/{len(frames)}"
+            )  # Actualizamos el recuadro de texto
 
             # Actualizar evolución temporal
             for i, (punto, line_temp) in enumerate(zip(puntos_obs, lineas_temp)):
+                # Actualiza una de las tres líneas (roja, verde, azul).
                 line_temp.set_data(self.t[: j + 1], self.y[punto, : j + 1])
+                # self.t[: j + 1] = Tiempos desde 0 hasta j (historial completo)
+                # self.y[punto, : j + 1] = Desplazamientos del punto específico desde 0 hasta j
 
-            return [line] + lineas_temp + [time_text]
+            return [line] + lineas_temp + [time_text]  # devuelve los cambios
 
+        # POR FIIIIIIIIIIIIIIIIIIN, VAMOS A ANIMAR :D
         # Frames a animar
-        frames = range(0, self.Nt, saltar_frames)
+        frames = range(
+            0, self.Nt, saltar_frames
+        )  # Crea una secuencia de números con saltos.
+        """
+        Dios nos agarre confesados, ahi les va :D
 
+        Creamos un objeto de animation.FuncAnimation.
+
+        Es una clase de Matplotlib que automatiza el proceso de crear animaciones: es decir, decidi ser feliz
+        Parámetros:
+
+        fig: La figura (el lienzo completo con ambos paneles)
+        animate: La función que actualiza cada frame
+        init_func=init: La función que inicializa (frame 0)
+        frames=len(frames): Cuántos frames crear
+             Si `len(frames) = 495`, crea 495 frames
+        interval=intervalo: Milisegundos entre frames
+            interval=50 -> 20 frames por segundo
+        blit=True: Optimización muy importante
+            blit = "Block Transfer"
+            Solo redibuja lo que cambió, no toda la figura
+            Hace la animación mucho más rápida
+            Requiere que animate e init devuelvan listas de objetos
+        repeat=True: La animación se repite en loop
+
+        ¿Cómo funciona internamente?
+            1. Llama init() -> dibuja frame vacío
+            2. Llama animate(0) -> dibuja frame 0
+            3. Espera 'interval' ms
+            4. Llama animate(1) -> dibuja frame 1
+            5. Espera 'interval' ms
+            6. Llama animate(2) -> dibuja frame 2
+        """
         anim = animation.FuncAnimation(
             fig,
             animate,
@@ -298,7 +452,9 @@ class CuerdaVibrante:
         # Guardar animación
         if archivo_salida:
             print(f"  Guardando animación en {archivo_salida}...")
-            writer = PillowWriter(fps=20)
+            writer = PillowWriter(
+                fps=20
+            )  # creamos un writer de Pillow: Un objeto que sabe cómo convertir frames a formato GIF.
             anim.save(archivo_salida, writer=writer)
             print(f"  :D Animación guardada")
 
@@ -429,7 +585,7 @@ def experimento_1_estable():
     c = 10.0  # Velocidad de onda (m/s)
     T_max = 0.5  # Tiempo total (s)
     Nx = 100  # Puntos espaciales
-    Courant = 0.5  # r = 0.5 < 1 → ESTABLE
+    Courant = 0.5  # r = 0.5 < 1 -> ESTABLE
 
     # Crear simulación
     cuerda = CuerdaVibrante(L, c, T_max, Nx, Courant)
@@ -466,7 +622,7 @@ def experimento_2_inestable():
     c = 10.0  # Velocidad de onda (m/s)
     T_max = 0.5  # Tiempo total (s)
     Nx = 100  # Puntos espaciales
-    Courant = 1.5  # r = 1.5 > 1 → INESTABLE
+    Courant = 1.5  # r = 1.5 > 1 -> INESTABLE
 
     # Crear simulación
     cuerda = CuerdaVibrante(L, c, T_max, Nx, Courant)
@@ -522,6 +678,7 @@ def experimento_3_critico():
 
     # Visualización
     cuerda.animar(archivo_salida="animacion_critica.gif", saltar_frames=2)
+    cuerda.graficar_instantaneas([0, T_max / 4, T_max / 2, 3 * T_max / 4, T_max])
 
     return cuerda
 
@@ -598,34 +755,34 @@ if __name__ == "__main__":
     cuerda3 = experimento_3_critico()
 
     # Comparación
-    comparacion_courant()
+    # comparacion_courant()
 
-    print("\n" + "=" * 60)
-    print("RESUMEN DE RESULTADOS")
-    print("=" * 60)
-    print(
-        """
-CONCLUSIONES:
+#     print("\n" + "=" * 60)
+#     print("RESUMEN DE RESULTADOS")
+#     print("=" * 60)
+#     print(
+#         """
+# CONCLUSIONES:
 
-1. Condición de Courant r ≤ 1:
-   - r = c·Δt/Δx ≤ 1
-   - Equivalente a: Δt ≤ Δx/c
+# 1. Condición de Courant r ≤ 1:
+#    - r = c·Δt/Δx ≤ 1
+#    - Equivalente a: Δt ≤ Δx/c
    
-2. Interpretación física:
-   - La onda no puede viajar más de Δx en un tiempo Δt
-   - Respeta la causalidad del sistema
+# 2. Interpretación física:
+#    - La onda no puede viajar más de Δx en un tiempo Δt
+#    - Respeta la causalidad del sistema
    
-3. Resultados experimentales:
-   - r < 1: Solución ESTABLE y físicamente correcta
-   - r = 1: Marginalmente estable (caso límite)
-   - r > 1: Solución INESTABLE (oscilaciones espurias)
+# 3. Resultados experimentales:
+#    - r < 1: Solución ESTABLE y físicamente correcta
+#    - r = 1: Marginalmente estable (caso límite)
+#    - r > 1: Solución INESTABLE (oscilaciones espurias)
    
-4. Recomendación práctica:
-   - Usar r ≈ 0.5 - 0.8 para máxima estabilidad
-   - Nunca usar r > 1.0
-    """
-    )
-    print("=" * 60 + "\n")
+# 4. Recomendación práctica:
+#    - Usar r ≈ 0.5 - 0.8 para máxima estabilidad
+#    - Nunca usar r > 1.0
+#     """
+#     )
+#     print("=" * 60 + "\n")
 
     print(":D Todos los experimentos completados")
     print(f"dir: Resultados guardados en: {os.getcwd()}")
