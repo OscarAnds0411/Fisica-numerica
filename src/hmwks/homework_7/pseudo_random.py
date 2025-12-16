@@ -94,36 +94,37 @@ def linear_congruential(a, c, M, x0, max_iterations=None):
     long_g = len(num_ale)
     return num_ale, long_g
 
-def graficos(lista_aleatorios,titulo,output_dir,flag = True):
+
+def graficos(lista_aleatorios, titulo, output_dir, flag=True):
     """
     funciones para graficar
     """
-    if len(lista_aleatorios)<2:
-        raise ValueError(f"Se necesitan al menos 2 números, recibidos: {len(lista_aleatorios)}")
-    
+    if len(lista_aleatorios) < 2:
+        raise ValueError(
+            f"Se necesitan al menos 2 números, recibidos: {len(lista_aleatorios)}"
+        )
+
     if flag:
         # Ajustar longitud a número par para emparejamiento correcto
         lon_g_par = len(lista_aleatorios) - len(lista_aleatorios) % 2
 
         # Separar en índices pares e impares (slicing)
-        xpar = lista_aleatorios[:lon_g_par:2]    # Índices 0, 2, 4, ... → x_{2i}
-        ximpar = lista_aleatorios[1:lon_g_par:2] # Índices 1, 3, 5, ... → x_{2i+1}
+        xpar = lista_aleatorios[:lon_g_par:2]  # Índices 0, 2, 4, ... -> x_{2i}
+        ximpar = lista_aleatorios[1:lon_g_par:2]  # Índices 1, 3, 5, ... -> x_{2i+1}
 
         # Graficar Test de Correlación Serial
         # plt.figure(figsize=(14, 12))
 
         # plt.subplot(1, 2, 1)
-        plt.plot(ximpar, xpar, 'o', markersize=3, alpha=0.6, color='dodgerblue')
+        plt.plot(ximpar, xpar, "o", markersize=3, alpha=0.6, color="dodgerblue")
         plt.xlabel(r"$x_{2i+1}$ (índices impares)", fontsize=11)
         plt.ylabel(r"$x_{2i}$ (índices pares)", fontsize=11)
-        plt.title(f"{titulo}", fontsize=12, fontweight='bold')
+        plt.title(f"{titulo}", fontsize=12, fontweight="bold")
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
         filename = os.path.join(output_dir, f"grafico_par_impar.png")
         plt.savefig(filename, dpi=300, bbox_inches="tight")
-        cons.print(
-            f"[bold green] Imagen guardada en:[/bold green] {filename}\n"
-        )
+        cons.print(f"[bold green] Imagen guardada en:[/bold green] {filename}\n")
         plt.show()
 
         # Análisis visual
@@ -135,45 +136,60 @@ def graficos(lista_aleatorios,titulo,output_dir,flag = True):
         cons.print(f"{correlacion_info}", style="bold on magenta")
     else:
         I = np.arange(len(lista_aleatorios))
-    
+
         # plt.subplot(1, 2, 2)
-        plt.plot(I, lista_aleatorios, 'o', markersize=2, alpha=0.5, color='forestgreen')
+        plt.plot(I, lista_aleatorios, "o", markersize=2, alpha=0.5, color="forestgreen")
         plt.xlabel("Índice $i$", fontsize=11)
         plt.ylabel(r"$x_i$", fontsize=11)
-        plt.title(f"{titulo}: Distribución Temporal", fontsize=12, fontweight='bold')
+        plt.title(f"{titulo}: Distribución Temporal", fontsize=12, fontweight="bold")
         plt.grid(True, alpha=0.3)
 
         # Líneas de referencia (min/max)
-        plt.axhline(min(lista_aleatorios), color='red', linestyle='--', alpha=0.3, linewidth=1)
-        plt.axhline(max(lista_aleatorios), color='red', linestyle='--', alpha=0.3, linewidth=1)
+        plt.axhline(
+            min(lista_aleatorios), color="red", linestyle="--", alpha=0.3, linewidth=1
+        )
+        plt.axhline(
+            max(lista_aleatorios), color="red", linestyle="--", alpha=0.3, linewidth=1
+        )
 
         plt.tight_layout()
         filename = os.path.join(output_dir, f"{titulo}.png")
         plt.savefig(filename, dpi=300, bbox_inches="tight")
-        cons.print(
-            f"[bold green] Imagen guardada en:[/bold green] {filename}\n"
-        )
+        cons.print(f"[bold green] Imagen guardada en:[/bold green] {filename}\n")
         plt.show()
     return filename
+
+
 cons.rule("[bold red] Primera parte, generación de numeros ''aleatorios''")
 
-cons.print("[bold cyan] Creamos una funcion llamada [/bold cyan][bold yellow] linear_congruential\n")
-a, c, M, x0 =57, 1, 256, 10
-cons.print(f"[bold cyan] Usamos la variables a: {a}, c: {c}, M: {M} y una semilla x0: {x0}\n")
+cons.print(
+    "[bold cyan] Creamos una funcion llamada [/bold cyan][bold yellow] linear_congruential\n"
+)
+a, c, M, x0 = 57, 1, 256, 10
+# a, c, M, x0 =7,0,10,7
+cons.print(
+    f"[bold cyan] Usamos la variables a: {a}, c: {c}, M: {M} y una semilla x0: {x0}\n"
+)
 
-lista_ale, periodo = linear_congruential(a,c,M,x0)
-tab = Table(title="[yellow]Primeros 10 números pseudo-aleatorios", box = box.ROUNDED)
-columns=["i","x_aleatorio"]
+lista_ale, periodo = linear_congruential(a, c, M, x0)
+tab = Table(title="[yellow]Primeros 10 números pseudo-aleatorios", box=box.ROUNDED)
+columns = ["i", "x_aleatorio"]
 for r in columns:
     tab.add_column(r, justify="center", style="magenta")
 
-for i in range(10):
-    tab.add_row(f"{str(i+1)}",f"{lista_ale[i]}")
+if len(lista_ale) < 10:
+    for i in range(len(lista_ale)):
+        tab.add_row(f"{str(i+1)}", f"{lista_ale[i]}")
+else:
+    for i in range(10):
+        tab.add_row(f"{str(i+1)}", f"{lista_ale[i]}")
 cons.print(tab)
 cons.print(f"El periodo del algoritmo es: {periodo}")
 
 cons.rule("[bold red]Graficos del generador de pseudo numeros aleatorios")
-cons.print("[bold cyan] De nuestra sucesión generada, graficaremos los pares (x_{2i-1}, x_{2i})")
-graficos(lista_ale,r"Grafico de los puntos $(x_{2i-1}, x_{2i})$", output_dir)
+cons.print(
+    "[bold cyan] De nuestra sucesión generada, graficaremos los pares (x_{2i-1}, x_{2i})"
+)
+graficos(lista_ale, r"Grafico de los puntos $(x_{2i-1}, x_{2i})$", output_dir)
 cons.print("[bold cyan] De nuestra sucesión generada, graficaremos los pares (x_i, i)")
-graficos(lista_ale,r"Grafico de los puntos $(x_i, i)$", output_dir, False)
+graficos(lista_ale, r"Grafico de los puntos $(x_i, i)$", output_dir, False)
