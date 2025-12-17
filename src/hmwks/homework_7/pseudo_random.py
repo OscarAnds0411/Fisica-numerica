@@ -15,15 +15,19 @@ i = 1; 2; :::
 (d) Ahora graÖque xi vs i.
 """
 
+import os
+import random
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 # importacion de librerias
 import pylab as pyl
-import os
-import numpy as np
-import matplotlib.pyplot as plt
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich import box
+from scipy.stats import chi2
 
 # creamos una consola
 cons = Console()
@@ -193,3 +197,138 @@ cons.print(
 graficos(lista_ale, r"Grafico de los puntos $(x_{2i-1}, x_{2i})$", output_dir)
 cons.print("[bold cyan] De nuestra sucesión generada, graficaremos los pares (x_i, i)")
 graficos(lista_ale, r"Grafico de los puntos $(x_i, i)$", output_dir, False)
+
+
+def chi_cuadrada(numeros, M):
+    """
+    Prueba chi-cuadrada simple para ver si los números son uniformes.
+    Parámetros:
+    -----------
+    numeros : list
+        Lista de números a evaluar
+    M : int
+        Módulo del generador (rango de valores)
+    Retorna:
+    --------
+    dict con resultados de la prueba
+    """
+    N = len(numeros)
+    k = int(np.sqrt(N))  # Número de intervalos
+
+    # Contar cuántos números caen en cada intervalo
+    freq_obs, _ = np.histogram(numeros, bins=k, range=(0, M))
+
+    # Lo que esperaríamos si fueran uniformes
+    freq_esp = N / k
+
+    # Calcular chi-cuadrada
+    chi2_calc = np.sum((freq_obs - freq_esp) ** 2 / freq_esp)
+
+    # Valor crítico (95% de confianza)
+    gl = k - 1
+    chi2_crit = chi2.ppf(0.95, gl)
+
+    # ¿Pasa la prueba?
+    pasa = chi2_calc < chi2_crit
+
+    return {
+        "chi2": chi2_calc,
+        "critico": chi2_crit,
+        "pasa": pasa,
+        "freq_obs": freq_obs,
+        "freq_esp": freq_esp,
+        "k": k,
+    }
+
+
+def graficar_chi2_simple(resultado, numeros, titulo, output_dir):
+    """
+    Gráfico simple de la prueba
+    """
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+
+    # Histograma
+    ax[0].hist(
+        numeros, bins=resultado["k"], alpha=0.7, color="steelblue", edgecolor="black"
+    )
+    ax[0].axhline(
+        resultado["freq_esp"],
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label="Esperado",
+    )
+    ax[0].set_xlabel("Valor")
+    ax[0].set_ylabel("Frecuencia")
+    ax[0].set_title(f"{titulo}: Histograma")
+    ax[0].legend()
+    ax[0].grid(alpha=0.3)
+
+    # Frecuencias
+    x = np.arange(resultado["k"])
+    ax[1].bar(x, resultado["freq_obs"], alpha=0.7, color="steelblue", label="Observado")
+    ax[1].axhline(
+        resultado["freq_esp"],
+        color="red",
+        linestyle="--",
+        linewidth=2,
+        label="Esperado",
+    )
+    ax[1].set_xlabel("Intervalo")
+    ax[1].set_ylabel("Frecuencia")
+    ax[1].set_title(f"{titulo}: Obs vs Esp")
+    ax[1].legend()
+    ax[1].grid(alpha=0.3)
+
+    plt.tight_layout()
+    filename = os.path.join(output_dir, f"chi2_{titulo}.png")
+    plt.savefig(filename, dpi=300)
+    cons.print(f"[green]Guardado: {filename}")
+    plt.show()
+
+
+cons.rule("[bold red]Prueba Chi-Cuadrada")
+
+print("\n¿Cómo saber si los números son aleatorios?")
+print("Usamos la prueba chi-cuadrada (χ²) para verificar si son uniformes")
+print("Si χ² calculado < χ² crítico -> SON uniformes :D")
+print("Si χ² calculado ≥ χ² crítico -> NO SON uniformes D:<\n")
+
+# --- Prueba 1: Nuestro LCG ---
+cons.print("[cyan]Probando nuestro generador LCG...[/cyan]")
+resultado_lcg = chi_cuadrada(lista_ale, M)
+
+print(f"\nResultados LCG:")
+print(f"  χ² calculado: {resultado_lcg['chi2']:.2f}")
+print(f"  χ² crítico:   {resultado_lcg['critico']:.2f}")
+print(
+    f"  Resultado:    {':D Pasa la prueba' if resultado_lcg['pasa'] else 'D:< NO pasa'}\n"
+)
+
+graficar_chi2_simple(resultado_lcg, lista_ale, "LCG", output_dir)
+
+# --- Prueba 2: random de Python ---
+cons.print("[cyan]Probando random() de Python...[/cyan]")
+N = len(lista_ale)
+numeros_python = [random.randint(0, M - 1) for _ in range(N)]
+resultado_python = chi_cuadrada(numeros_python, M)
+
+print(f"\nResultados Python random:")
+print(f"  χ² calculado: {resultado_python['chi2']:.2f}")
+print(f"  χ² crítico:   {resultado_python['critico']:.2f}")
+print(
+    f"  Resultado:    {':D Pasa la prueba' if resultado_python['pasa'] else 'D:< NO pasa'}\n"
+)
+
+graficar_chi2_simple(resultado_python, numeros_python, "Python_random", output_dir)
+
+# --- Comparación ---
+cons.rule("[green]COMPARACIÓN")
+print(
+    f"\nLCG:           {':D Uniforme' if resultado_lcg['pasa'] else 'D:< NO uniforme'}"
+)
+print(
+    f"Python random: {':D Uniforme' if resultado_python['pasa'] else 'D:< NO uniforme'}"
+)
+
+cons.print("\n[green]:D Tarea completa[/green]\n")

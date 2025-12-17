@@ -11,16 +11,16 @@ puede que en el momento me haya parecido una graniosa idea
 y que ahorita que trate de explicarlo no tenga sentido tanta vuelta, en fin al final del día FUNCIONA
 """
 
-import numpy as np  # arreglos (num.python)
-import matplotlib.pyplot as plt  # plots
-import matplotlib.animation as animation  # animaciones de graficas
-from matplotlib.animation import PillowWriter  # permite guardar mi animacion en un GIF
-from typing import (
+import os  # manejo de archivos
+from typing import (  # Callable: indicar que un parametro es una funcion; Tuple: indica que un funcion devuelve una tuple y de que tipo
     Callable,
     Tuple,
-)  # Callable: indicar que un parametro es una funcion; Tuple: indica que un funcion devuelve una tuple y de que tipo
-import os  # manejo de archivos
+)
 
+import matplotlib.animation as animation  # animaciones de graficas
+import matplotlib.pyplot as plt  # plots
+import numpy as np  # arreglos (num.python)
+from matplotlib.animation import PillowWriter  # permite guardar mi animacion en un GIF
 
 # Si bien no hemos visto nada de esto, quiero practicar para ya ponerme a trabajar
 # por lo que se me hizo mucho mas facil construir una clase para ya no repetir codigo
@@ -101,6 +101,7 @@ class CuerdaVibrante:
         # Discretización espacial
         self.dx = L / (Nx - 1)
         self.x = np.linspace(0, L, Nx)
+        # self.Courant = self.c*(self.T_max/self.x)
 
         # Discretización temporal (según condición de Courant)
         self.dt = Courant * self.dx / c
@@ -586,6 +587,7 @@ def experimento_1_estable():
     T_max = 0.5  # Tiempo total (s)
     Nx = 100  # Puntos espaciales
     Courant = 0.5  # r = 0.5 < 1 -> ESTABLE
+    # Courant = c*(T_max/L)  # r = 0.5 < 1 -> ESTABLE
 
     # Crear simulación
     cuerda = CuerdaVibrante(L, c, T_max, Nx, Courant)
@@ -757,32 +759,32 @@ if __name__ == "__main__":
     # Comparación
     # comparacion_courant()
 
-#     print("\n" + "=" * 60)
-#     print("RESUMEN DE RESULTADOS")
-#     print("=" * 60)
-#     print(
-#         """
-# CONCLUSIONES:
+    #     print("\n" + "=" * 60)
+    #     print("RESUMEN DE RESULTADOS")
+    #     print("=" * 60)
+    #     print(
+    #         """
+    # CONCLUSIONES:
 
-# 1. Condición de Courant r ≤ 1:
-#    - r = c·Δt/Δx ≤ 1
-#    - Equivalente a: Δt ≤ Δx/c
-   
-# 2. Interpretación física:
-#    - La onda no puede viajar más de Δx en un tiempo Δt
-#    - Respeta la causalidad del sistema
-   
-# 3. Resultados experimentales:
-#    - r < 1: Solución ESTABLE y físicamente correcta
-#    - r = 1: Marginalmente estable (caso límite)
-#    - r > 1: Solución INESTABLE (oscilaciones espurias)
-   
-# 4. Recomendación práctica:
-#    - Usar r ≈ 0.5 - 0.8 para máxima estabilidad
-#    - Nunca usar r > 1.0
-#     """
-#     )
-#     print("=" * 60 + "\n")
+    # 1. Condición de Courant r ≤ 1:
+    #    - r = c·Δt/Δx ≤ 1
+    #    - Equivalente a: Δt ≤ Δx/c
+
+    # 2. Interpretación física:
+    #    - La onda no puede viajar más de Δx en un tiempo Δt
+    #    - Respeta la causalidad del sistema
+
+    # 3. Resultados experimentales:
+    #    - r < 1: Solución ESTABLE y físicamente correcta
+    #    - r = 1: Marginalmente estable (caso límite)
+    #    - r > 1: Solución INESTABLE (oscilaciones espurias)
+
+    # 4. Recomendación práctica:
+    #    - Usar r ≈ 0.5 - 0.8 para máxima estabilidad
+    #    - Nunca usar r > 1.0
+    #     """
+    #     )
+    #     print("=" * 60 + "\n")
 
     print(":D Todos los experimentos completados")
     print(f"dir: Resultados guardados en: {os.getcwd()}")
